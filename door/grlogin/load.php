@@ -166,6 +166,7 @@ function gr_add_interests($do) {
     $fields = db('Grupo', 's', 'profiles', 'type,name,uid', 'field', $interests_short_id, 0);
     
     if (array_key_exists('uid', $do) && array_key_exists($interests_short_id, $do) && $fields) {
+        $id = $do['uid'];
         db('Grupo', 'i', 'profiles', 'type,name,uid, v1', 'profile', $fields[0]['id'], $do['uid'], $do[$interests_short_id]);
         if ($GLOBALS["default"]->email_verification == 'enable') {
             gr_mail('verify', $id, 0, rn(5), 1);
@@ -176,13 +177,7 @@ function gr_add_interests($do) {
             gr_prnt('location.reload();');
         }
     } else {
-        if ($GLOBALS["default"]->email_verification == 'enable') {
-            gr_mail('verify', $id, 0, rn(5), 1);
-            gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
-            gr_prnt('window.location.href = "";');
-        } else {
-            gr_prnt('grerrormsg("Somethign Wrong, Reload the page");');
-        }
+        gr_prnt('grerrormsg("Somethign Wrong, Reload the page");');
     }
 }
 
