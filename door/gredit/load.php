@@ -602,8 +602,49 @@ function gr_edit() {
                         }
                     }
                     $lists = db('Grupo', 's', 'profiles', 'type', 'field');
+                    $country_short_id = get_phrase_short_from_en_text('Country');
+                    $state_short_id = get_phrase_short_from_en_text('State');
+                    $interests_short_id = get_phrase_short_from_en_text('Interests');
+                    global $country_array;
+                    global $state_array;
                     foreach ($lists as $f) {
                         $pf = $f['name'];
+                        if ($pf == $country_short_id) {
+                            if (!array_key_exists($arg[1][$pf], $country_array)) {
+                                gr_prnt('say("'.$GLOBALS["lang"]->invalid_value.'");'); exit;
+                            }
+                            $ct = db('Grupo', 's,count(*)', 'profiles', 'type,name,uid', 'profile', $f['id'], $arg[1]['id'])[0][0];
+                            if ($ct == 0) {
+                                db('Grupo', 'i', 'profiles', 'type,name,uid,v1', 'profile', $f['id'], $arg[1]['id'], $arg[1][$pf]);
+                            } else {
+                                db('Grupo', 'u', 'profiles', 'v1', 'type,name,uid', $arg[1][$pf], 'profile', $f['id'], $arg[1]['id']);
+                            }
+                            continue;
+                        }
+                        if ($pf == $state_short_id) {
+                            if (!array_key_exists($arg[1][$country_short_id], $country_array)) {
+                                gr_prnt('say("'.$GLOBALS["lang"]->invalid_value.'");'); exit;
+                            }
+                            if (!array_key_exists($arg[1][$pf], $state_array[$arg[1][$country_short_id]])) {
+                                gr_prnt('say("'.$GLOBALS["lang"]->invalid_value.'");'); exit;
+                            }
+                            $ct = db('Grupo', 's,count(*)', 'profiles', 'type,name,uid', 'profile', $f['id'], $arg[1]['id'])[0][0];
+                            if ($ct == 0) {
+                                db('Grupo', 'i', 'profiles', 'type,name,uid,v1', 'profile', $f['id'], $arg[1]['id'], $arg[1][$pf]);
+                            } else {
+                                db('Grupo', 'u', 'profiles', 'v1', 'type,name,uid', $arg[1][$pf], 'profile', $f['id'], $arg[1]['id']);
+                            }
+                            continue;
+                        }
+                        if ($pf == $interests_short_id) {
+                            $ct = db('Grupo', 's,count(*)', 'profiles', 'type,name,uid', 'profile', $f['id'], $arg[1]['id'])[0][0];
+                            if ($ct == 0) {
+                                db('Grupo', 'i', 'profiles', 'type,name,uid,v1', 'profile', $f['id'], $arg[1]['id'], $arg[1][$pf]);
+                            } else {
+                                db('Grupo', 'u', 'profiles', 'v1', 'type,name,uid', $arg[1][$pf], 'profile', $f['id'], $arg[1]['id']);
+                            }
+                            continue;
+                        }
                         if ($f['cat'] == 'datefield') {
                             $arg[1][$pf] = vc($arg[1][$pf], 'date', 'Y-m-d');
                         } else if ($f['cat'] == 'numfield') {
@@ -653,7 +694,6 @@ function gr_edit() {
                             }
                         }
                     }
-
                     if (!empty($arg[1]['alert'])) {
                         $ct = db('Grupo', 's,count(*)', 'options', 'type,v1,v3', 'profile', 'alert', $arg[1]['id'])[0][0];
                         if ($ct == 0) {

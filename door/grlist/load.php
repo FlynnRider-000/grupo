@@ -1776,6 +1776,13 @@ function gr_list($do) {
                     $list['viewlink']-> name = $GLOBALS["lang"]->profile_link;
                     $list['viewlink']-> cont = $GLOBALS["default"]->weburl.'chat/'.$usrname.'/';
                 }
+                $country_short_id = get_phrase_short_from_en_text('Country');
+                $state_short_id = get_phrase_short_from_en_text('State');
+                $interests_short_id = get_phrase_short_from_en_text('Interests');
+                $country_value = '';
+                $state_value = '';
+                global $country_array;
+                global $state_array;
                 foreach ($fields as $f) {
                     $pf = $f['name'];
                     $vpf = html_entity_decode($f['val']);
@@ -1801,7 +1808,27 @@ function gr_list($do) {
                             unset($list[$pf]);
                         }
                     }
+                    if ($pf == $country_short_id) {
+                        $list[$pf]-> cont = $country_array[$vpf];
+                        $country_value = $vpf;
+                    }
+                    if ($pf == $state_short_id) {
+                        $state_value = $vpf;
+                    }
+                    if ($pf == $interests_short_id) {
+                        $cont = '';
+                        $intrst_lists = explode(",", $vpf);
+                        foreach($intrst_lists as $intrst) {
+                            $cont .= ('<div class="interest_item_static">' . $intrst . '</div>');
+                        }
+                        $list[$pf]-> cont = $cont;
+                        $list[$pf]-> interest = 1;
+                    }
                 }
+                if ($state_value) {
+                    $list[$state_short_id]-> cont = $state_array[$country_value][$state_value];
+                }
+
                 if (isset($do['ldt']) && $do['ldt'] == 'group') {
                     if ($r[0]['grrole'] == 1 || $r[0]['grrole'] == 2 || isset($GLOBALS["roles"]['groups']['7'])) {
                         $list['embedcode'] = new stdClass();

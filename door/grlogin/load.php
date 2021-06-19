@@ -7,6 +7,7 @@ function gr_register($do) {
                 gr_prnt('grerrormsg("'.$GLOBALS["lang"]->ip_blocked.'","e");');
                 exit;
             }
+            
             $do["email"] = vc($do["email"], 'email');
             $do["fname"] = vc($do["fname"], 'strip');
             $fields = db('Grupo', 's', 'profiles', 'type,req', 'field', 3);
@@ -39,7 +40,7 @@ function gr_register($do) {
                         gr_prnt('grerrormsg("'.$GLOBALS["lang"]->username_already_exists.'");');
                         exit;
                     }
-                }
+                }                
                 if ($GLOBALS["default"]->non_latin_usernames == 'enable') {
                     $nonlatreg = 'register,nonlatin';
                 } else {
@@ -54,6 +55,11 @@ function gr_register($do) {
                     $id = $reg[1];
                     gr_data('i', 'profile', 'name', $do["fname"], $id, $do["name"], gr_usrcolor());
                     $fields = db('Grupo', 's', 'profiles', 'type,req|,type,req', 'field', 2, 'field', 3);
+                    $country_short_id = get_phrase_short_from_en_text('Country');
+                    $state_short_id = get_phrase_short_from_en_text('State');
+                    $state_value='';
+                    global $country_array;
+                    global $state_array;
                     foreach ($fields as $f) {
                         $pf = $f['name'];
                         if ($f['cat'] == 'datefield') {
@@ -62,7 +68,20 @@ function gr_register($do) {
                             $do[$pf] = vc($do[$pf], 'num');
                         } else if ($f['cat'] == 'dropdownfield') {
                             $selc = explode(",", $f['v1']);
-                            if (!in_array($do[$pf], $selc)) {
+                            if ($pf == $country_short_id) {
+                                if (!array_key_exists($do[$pf], $country_array)) {
+                                    $do[$pf] = null;
+                                }
+                            }
+                            else if ($pf == $state_short_id) {
+                                if (!array_key_exists($do[$country_short_id], $country_array)) {
+                                    $do[$pf] = null;
+                                }
+                                if (!array_key_exists($do[$pf], $state_array[$do[$country_short_id]])) {
+                                    $do[$pf] = null;
+                                }
+                            }
+                            else if (!in_array($do[$pf], $selc)) {
                                 $do[$pf] = null;
                             }
                         } else {
@@ -78,8 +97,39 @@ function gr_register($do) {
                         gr_prnt('window.location.href = "";');
                     } else {
                         $grjoin = $GLOBALS["default"]->autogroupjoin;
-                        usr('Grupo', 'forcelogin', $id);
-                        gr_prnt('location.reload();');
+                        $interests_short_id = get_phrase_short_from_en_text('Interests');
+                        if ($interests_short_id) {
+                            gr_prnt('$(".submit.global").html("Start");');
+                            gr_prnt('$(".submit.global").addClass("interest_page_btn");');
+                            gr_prnt('$(".submit.global").attr("do", "fill_interests");');
+                            gr_prnt('$(".doz").val("fill_interests");');
+                            $interests_str = '<input class=\"notreq d-none\" id=interests_dropdown name='.$interests_short_id.'>';
+                            $interests_str .= '<input class=\"notreq d-none\" name=uid value='.$id.'>';
+                            $interests_str .= '<h5>Choose your interests:</h5>';
+                            $interests_str .= '<div class=interest_group>';
+
+                            $fields = db('Grupo', 's', 'profiles', 'type,name', 'field', $interests_short_id);
+                            $options = array();
+                            if ($fields) {
+                                $options = explode(",",$fields[0]['v1']);
+                            }
+                            foreach($options as $option) {
+                                $interests_str .= ('<div class=interest_item value='.$option.'>'.$option.'</div>');
+                            }
+                            $interests_str .= '</div>';
+                            gr_prnt('$(".register").html("'.$interests_str.'");');
+                            gr_prnt('$(".switch").remove();');
+                            gr_prnt('$(".elements > .global").remove();');
+                            gr_prnt('$(".interest_item").click(function(){');
+                            gr_prnt('    const sel_obj = $(".interest_item.selected").length;');
+                            gr_prnt('    const selected = $(this).hasClass("selected");');
+                            gr_prnt('    if(selected) $(this).removeClass("selected");');
+                            gr_prnt('    else if(sel_obj < 3) $(this).addClass("selected");');
+                            gr_prnt('});');
+                        } else {
+                            usr('Grupo', 'forcelogin', $id);
+                            gr_prnt('location.reload();');
+                        }
                         if (!empty($grjoin)) {
                             $cr = gr_group('valid', $grjoin);
                             if ($cr[0]) {
@@ -108,6 +158,20 @@ function gr_register($do) {
         }
     }
 }
+
+function gr_add_interests($do) {
+    $interests_short_id = get_phrase_short_from_en_text('Interests');
+    $fields = db('Grupo', 's', 'profiles', 'type,name,uid', 'field', $interests_short_id, 0);
+    
+    if (array_key_exists('uid', $do) && array_key_exists($interests_short_id, $do) && $fields) {
+        db('Grupo', 'i', 'profiles', 'type,name,uid, v1', 'profile', $fields[0]['id'], $do['uid'], $do[$interests_short_id]);
+        usr('Grupo', 'forcelogin', $do['uid']);
+        gr_prnt('location.reload();');
+    } else {
+        gr_prnt('grerrormsg("Somethign Wrong, Reload the page");');
+    }
+}
+
 function gr_login($do) {
     if ($GLOBALS["default"]->recaptcha != 'enable' || !empty($do["g-recaptcha-response"]) && gr_captcha($do["g-recaptcha-response"])) {
         if (gr_usip('check')) {

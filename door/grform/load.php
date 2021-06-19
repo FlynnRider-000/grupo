@@ -977,6 +977,11 @@ function gr_form($do) {
             }
             $fields->privatemsg = array($GLOBALS["lang"]->privatemsg, 'select', $pmfields, $pmsetting[0]['v2']);
             $lists = db('Grupo', 's', 'profiles', 'type', 'field');
+            // Country & State update
+            $country_short_id = get_phrase_short_from_en_text('Country');
+            $state_short_id = get_phrase_short_from_en_text('State');
+            $interests_short_id = get_phrase_short_from_en_text('Interests');
+            $current_country = '';
             foreach ($lists as $f) {
                 $sel = null;
                 $pf = $f['name'];
@@ -990,6 +995,17 @@ function gr_form($do) {
                 }
                 if ($f['req'] == 1 || $f['req'] == 3) {
                     $GLOBALS["lang"]->$pf = $GLOBALS["lang"]->$pf.' *';
+                }
+                if ($pf == $country_short_id) {
+                    global $country_array;
+                    $fields-> $pf = array($GLOBALS["lang"]->$pf, 'country', $country_array, $vpf);
+                    $current_country = $vpf;
+                    continue;
+                }
+                if ($pf == $state_short_id) {
+                    global $state_array;
+                    $fields-> $pf = array($GLOBALS["lang"]->$pf, 'state', $state_array, $vpf, $current_country);
+                    continue;
                 }
                 if ($f['cat'] == 'shorttext') {
                     $fields-> $pf = array($GLOBALS["lang"]->$pf, 'input', 'text', '"'.$vpf.'"');
@@ -1005,6 +1021,9 @@ function gr_form($do) {
                         $sel[$sl] = $sl;
                     }
                     $fields-> $pf = array($GLOBALS["lang"]->$pf, 'select', $sel, $vpf);
+                    if ($pf == $interests_short_id) {
+                        $fields-> $pf = array($GLOBALS["lang"]->$pf, 'interests', $sel, $vpf);
+                    }
                 }
             }
             if (gr_role('access', 'users', '7')) {

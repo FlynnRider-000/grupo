@@ -184,6 +184,10 @@ $('.two > section > div > div form .submit.global').on('click', function(e) {
             }
         }
     });
+    if ($(this).attr('do') == 'fill_interests') {
+        const selected = $(".interest_item.selected").toArray();
+        $('#interests_dropdown').val(selected.map(item => $(item).attr('value')).join());
+    }
     if (doer === 1) {
         var s = 'eval(data);';
         $(this).attr('load', $(".dumb > .loading").text());

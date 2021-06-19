@@ -1,4 +1,5 @@
-<?php if(!defined('s7V9pz')) {die();}?><?php
+<?php if(!defined('s7V9pz')) {die();}?>
+<?php include "./static/country_state_list.php";?><?php
 fc('grupo');
 if ($GLOBALS["logged"]) {
     if (isset($_POST["do"])) {
@@ -194,5 +195,22 @@ gr_core('hf', 'footer');
     import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwainstall';
     const el = document.createElement('pwa-update');
     document.body.appendChild(el);
+</script>
+<!-- Handle for Country/States -->
+<?php global $state_array;?>
+<script>
+    $('#country_dropdown_field').change(function(e) {
+        const defaultValue = $("#state_dropdown_field option").first().html();
+        let dropdown_str = '<option value="0">' + defaultValue + '</option>';
+        const states_string = '<?php echo json_encode($state_array);?>';
+        const states_obj = JSON.parse(states_string)[$(this).val()];
+        if (states_obj != undefined) {
+            for (let state_code in states_obj) {
+                const state_name = states_obj[state_code];
+                dropdown_str += ('<option value="' + state_code + '">' + state_name + "</option>");
+            }
+        }
+        $("#state_dropdown_field").html(dropdown_str);
+    });
 </script>
 </html>

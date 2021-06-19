@@ -2121,7 +2121,7 @@ $('body').on('click', '.formpop', function(e) {
     data = $.extend(data, $(this).data());
     $(".grupo-pop .head").text($(this).attr('title'));
     $(".grupo-pop .grsub").val($(this).attr('btn'));
-    var s = '$(".grupo-pop").fadeIn();var fd="";';
+    var s = '$(".grupo-pop").fadeIn();var fd="";var states_list=[];';
     s = s+'if(Object.keys(data).length < 4 || data["fsearch"]=="off"){$(".grupo-pop > div > form > .search").hide();}';
     s = s+'else{$(".grupo-pop > div > form > .search").show();}';
     s = s+'$(".grupo-pop .grdo").val("'+$(this).attr('do')+'");';
@@ -2143,7 +2143,21 @@ $('body').on('click', '.formpop', function(e) {
     s = s+'else if(v[3]!==undefined && v[1]==="span"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><span name="+k+" >"+htmlDecode(v[3])+"</span>"}';
     s = s+'else if(v[1]==="textarea"){if(v[4]==undefined){v[4]="";}fd=fd+"<label>"+htmlDecode(v[0])+"</label><textarea name="+k+" placeholder="+v[4]+"></textarea>"}';
     s = s+'else if(v[1]==="input"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><input type="+v[2]+" name="+k+" autocomplete=dsb>"}';
-    s = s+'else if(v[1]==="select"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><select name="+k+" >";';
+    s = s+'else if(v[1]==="state"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><select name="+k+" id=state_dropdown_field>";';
+    s = s+'if(jQuery.type(v[2])=="object"){';
+    s = s+'fd=fd+"<option value=0>------</option>";';
+    s = s+'states_list = v[2];';
+    s = s+'if(v[4] in v[2]){';
+    s = s+'$.each(v[2][v[4]] , function(index, val) {var sel="";if(index==v[3]){sel="selected";} fd=fd+"<option "+sel+" value='+"'"+'"+index+"'+"'"+'>"+htmlDecode(val)+"</option>";});}';
+    s = s+'}';
+    s = s+'fd=fd+"</select>"}';
+    s = s+'else if(v[1]==="interests"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><input type=text class=d-none name="+k+" id=interests_dropdown>";';
+    s = s+'fd=fd+"<div class=interest_group>";';
+    s = s+'const cur_interests = v[3].split(",");';
+    s = s+'$.each(v[2], function(index, val) {const sel = cur_interests.includes(val)?"interest_item selected":"interest_item";fd=fd+"<div class=\'"+sel+"\' value="+val+">"+val+"</div>"});';
+    s = s+'fd=fd+"</div>";';
+    s = s+'}';
+    s = s+'else if(v[1]==="select" || v[1]==="country"){const cntry_cls=v[1]=="country"?"country_dropdown_field":"";fd=fd+"<label>"+htmlDecode(v[0])+"</label><select name="+k+" id="+cntry_cls+">";';
     s = s+'if(jQuery.type(v[2])=="object"){';
     s = s+'fd=fd+"<option value=0>------</option>";';
     s = s+'$.each(v[2] , function(index, val) {var sel="";if(index==v[3]){sel="selected";} fd=fd+"<option "+sel+" value='+"'"+'"+index+"'+"'"+'>"+htmlDecode(val)+"</option>";});';
@@ -2163,6 +2177,27 @@ $('body').on('click', '.formpop', function(e) {
     s = s+'$(".grupo-pop > div > form > .fields > div > span.fileup > input").hide();$(".colorpick").colorpicker();';
     s = s+'$(".grupo-pop > div > form > .search > input").focus();';
     s = s+'$(".grupo-pop > div > form > div").scrollTop(0);lazyload();autotimez("run");';
+    s = s+'$("#country_dropdown_field").change(function(e) {';
+    s = s+'    const defaultValue = $("#state_dropdown_field option").first().html();';
+    s = s+'    let dropdown_str = "<option value=0>" + defaultValue + "</option>";';
+    s = s+'    ';
+    s = s+'    if (states_list != undefined && ($(this).val() in states_list)) {';
+    s = s+'        const st_list=states_list[$(this).val()];';
+    s = s+'        for (let state_code in st_list) {';
+    s = s+'            const state_name = st_list[state_code];';
+    s = s+'            dropdown_str += ("<option value=" + state_code + ">" + state_name + "</option>");';
+    s = s+'        }';
+    s = s+'    }';
+    s = s+'    $("#state_dropdown_field").html(dropdown_str);';
+    s = s+'});';
+    s = s+'$(".interest_item").click(function(){';
+    s = s+'    const sel_obj = $(".interest_item.selected").length;';
+    s = s+'    const selected = $(this).hasClass("selected");';
+    s = s+'    if(selected) $(this).removeClass("selected");';
+    s = s+'    else if(sel_obj < 3) $(this).addClass("selected");';
+    s = s+'    const selected_list = $(".interest_item.selected").toArray();';
+    s = s+'    $("#interests_dropdown").val(selected_list.map(item => $(item).attr("value")).join());';
+    s = s+'});';
     var f = grlv = '';
     ajxx($(this), data, s, e, f, 'formpopup');
 
@@ -2810,6 +2845,8 @@ $('body').on('click tap touchstart', '.vwp', function(e) {
                                 pbtm.append("<li><b>"+htmlDecode(data[k].name)+"</b><span><span class='selectable'>"+htmlencode(data[k].cont)+"</span></span></li>");
                             } else if (k == 'viewlink') {
                                 pbtm.append("<li><b>"+htmlDecode(data[k].name)+"</b><span><span class='selectable sluglink'>"+htmlencode(data[k].cont)+"</span></span></li>");
+                            } else if (v['interest'] == 1) {
+                                pbtm.append("<li><b>"+htmlDecode(data[k].name)+"</b><div class='interest_group'>"+data[k].cont+"</span></li>");
                             } else {
                                 pbtm.append("<li><b>"+htmlDecode(data[k].name)+"</b><span>"+convertphonenum(url2link(htmlDecode(data[k].cont)))+"</span></li>");
                             }

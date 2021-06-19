@@ -5526,3 +5526,32 @@ max-width: 90%;
 {
 justify-content: flex-end;
 }
+
+.interest_group {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.interest_item,
+.interest_item_static {
+    background: white;
+    padding: 3px 20px;
+    border: 1px solid grey;
+    border-radius: 20px;
+    cursor: pointer;
+    color: black;
+    margin: 5px;
+}
+
+.interest_item.selected {
+    background: linear-gradient(to right,#E91E63,#9C27B0);   
+    color: white;
+}
+
+.interest_page_btn {
+    background: linear-gradient(to right,#75b9fa,#88dde8) !important;   
+}
+
+.interest_item_static {
+    padding: 0 10px !important;
+}

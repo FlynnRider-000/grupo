@@ -1,5 +1,6 @@
-<?php if(!defined('s7V9pz')) {die();}?><?php
-fc('guard', 'db', 'user', 'dir', 'grglobals');
+<?php if(!defined('s7V9pz')) {die();}?>
+<?php include "./static/country_state_list.php";?><?php
+fc('guard', 'db', 'user', 'dir', 'grglobals', 'common');
 function grupofns() {
     $do = get();
     if (file_exists('knob/install.php') || file_exists('knob/update.php')) {
@@ -19,6 +20,9 @@ function grupofns() {
             } else if ($do["do"] == "forgot") {
                 fc('grlogin');
                 gr_forgot($do);
+            } else if ($do["do"] == "fill_interests") {
+                fc('grlogin');
+                gr_add_interests($do);
             } else if ($do["do"] == "grpages") {
                 if (isset($do['page'])) {
                     gr_pages($do);
@@ -86,7 +90,12 @@ function grupofns() {
     }
 }
 function gr_loginfields() {
+    $country_short_id = get_phrase_short_from_en_text('Country');
+    $state_short_id = get_phrase_short_from_en_text('State');
+    $interests_short_id = get_phrase_short_from_en_text('Interests');
+
     $fields = db('Grupo', 's', 'profiles', 'type,req|,type,req', 'field', 2, 'field', 3);
+
     foreach ($fields as $f) {
         gr_prnt('<label>');
         $fname = $f['name'];
@@ -95,6 +104,27 @@ function gr_loginfields() {
             $fname = $fname.'*';
         }
         gr_prnt('<i class="gi-info-circled"></i>');
+        // Customize for state dropdown
+        if ($f['name'] == $state_short_id) {
+            gr_prnt('<select class="notreq" id="state_dropdown_field" name="'.$f['name'].'">');
+            gr_prnt('<option value="0">'.$fname.'</option>');
+            gr_prnt('</select>');
+            gr_prnt('</label>');
+            continue;
+        }
+        // Customize for country dropdown
+        if ($f['name'] == $country_short_id) {
+            gr_prnt('<select class="notreq" id="country_dropdown_field" name="'.$f['name'].'">');
+            gr_prnt('<option value="0">'.$fname.'</option>');
+            global $country_array;
+            foreach($country_array as $key => $country) {
+                $country_name = html_entity_decode($country);
+                gr_prnt('<option value="'.$key.'">'.$country_name.'</option>');
+            }
+            gr_prnt('</select>');
+            gr_prnt('</label>');
+            continue;
+        }
         if ($f['cat'] == 'shorttext') {
             gr_prnt('<input type="text" class="notreq" autocomplete="grautocmp" name="'.$f['name'].'" placeholder="'.$fname.'" />');
         } else if ($f['cat'] == 'longtext') {
@@ -104,8 +134,12 @@ function gr_loginfields() {
         } else if ($f['cat'] == 'numfield') {
             gr_prnt('<input class="notreq" type="number" autocomplete="grautocmp" name="'.$f['name'].'" placeholder="'.$fname.'" />');
         } else if ($f['cat'] == 'dropdownfield') {
+            $interest_attr = '';
+            if ($f['name'] == $interests_short_id) {
+                $interest_attr = 'style="display:none;" id="interest_dropdown"';
+            }
             $selt = explode(",", $f['v1']);
-            gr_prnt('<select class="notreq" name="'.$f['name'].'">');
+            gr_prnt('<select class="notreq" name="'.$f['name'].'" '.$interest_attr.'>');
             gr_prnt('<option value="0">'.$fname.'</option>');
             foreach ($selt as $sl) {
                 $sl = html_entity_decode($sl);
