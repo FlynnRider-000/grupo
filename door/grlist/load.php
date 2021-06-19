@@ -1814,6 +1814,7 @@ function gr_list($do) {
                     }
                     if ($pf == $state_short_id) {
                         $state_value = $vpf;
+                        if ($vpf == 0) unset($list[$pf]);
                     }
                     if ($pf == $interests_short_id) {
                         $cont = '';
