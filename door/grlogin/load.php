@@ -91,11 +91,7 @@ function gr_register($do) {
                             db('Grupo', 'i', 'profiles', 'type,name,uid,v1', 'profile', $f['id'], $id, $do[$pf]);
                         }
                     }
-                    if ($GLOBALS["default"]->email_verification == 'enable') {
-                        gr_mail('verify', $id, 0, rn(5), 1);
-                        gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
-                        gr_prnt('window.location.href = "";');
-                    } else {
+                    {
                         $grjoin = $GLOBALS["default"]->autogroupjoin;
                         $interests_short_id = get_phrase_short_from_en_text('Interests');
                         if ($interests_short_id) {
@@ -127,8 +123,14 @@ function gr_register($do) {
                             gr_prnt('    else if(sel_obj < 3) $(this).addClass("selected");');
                             gr_prnt('});');
                         } else {
-                            usr('Grupo', 'forcelogin', $id);
-                            gr_prnt('location.reload();');
+                            if ($GLOBALS["default"]->email_verification == 'enable') {
+                                gr_mail('verify', $id, 0, rn(5), 1);
+                                gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
+                                gr_prnt('window.location.href = "";');
+                            } else {
+                                usr('Grupo', 'forcelogin', $id);
+                                gr_prnt('location.reload();');
+                            }
                         }
                         if (!empty($grjoin)) {
                             $cr = gr_group('valid', $grjoin);
@@ -165,10 +167,22 @@ function gr_add_interests($do) {
     
     if (array_key_exists('uid', $do) && array_key_exists($interests_short_id, $do) && $fields) {
         db('Grupo', 'i', 'profiles', 'type,name,uid, v1', 'profile', $fields[0]['id'], $do['uid'], $do[$interests_short_id]);
-        usr('Grupo', 'forcelogin', $do['uid']);
-        gr_prnt('location.reload();');
+        if ($GLOBALS["default"]->email_verification == 'enable') {
+            gr_mail('verify', $id, 0, rn(5), 1);
+            gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
+            gr_prnt('window.location.href = "";');
+        } else {
+            usr('Grupo', 'forcelogin', $do['uid']);
+            gr_prnt('location.reload();');
+        }
     } else {
-        gr_prnt('grerrormsg("Somethign Wrong, Reload the page");');
+        if ($GLOBALS["default"]->email_verification == 'enable') {
+            gr_mail('verify', $id, 0, rn(5), 1);
+            gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
+            gr_prnt('window.location.href = "";');
+        } else {
+            gr_prnt('grerrormsg("Somethign Wrong, Reload the page");');
+        }
     }
 }
 
