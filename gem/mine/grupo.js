@@ -2128,6 +2128,7 @@ $('body').on('click', '.formpop', function(e) {
     s = s+'$(".grupo-pop .grtype").val("'+$(this).attr('act')+'");';
     s = s+'$.each(data, function(k, v) {var ab=ac="";if(v[1]!=undefined && v[1].indexOf(":") != -1){ab=v[1].split(":")[1]; ac=v[1].split(":")[2]; v[1]=v[1].split(":")[0];}';
     s = s+'ab="'+"'"+'"+ab+"'+"'"+'";';
+    s = s+'fd1=fd;';
     s = s+'fd=fd+"<div class="+ab+ac+">";';
     s = s+'if(v[2]==="hidden"){fd=fd+"<input type="+v[2]+" value="+htmlDecode(v[3])+" name="+k+" autocomplete=dsb>"}';
     s = s+'else if(v[2]==="disabled" && v[1]==="textarea"){fd=fd+"<label>"+v[0]+"</label><textarea disabled name="+k+">"+htmlDecode(v[3])+"</textarea>"}';
@@ -2143,7 +2144,11 @@ $('body').on('click', '.formpop', function(e) {
     s = s+'else if(v[3]!==undefined && v[1]==="span"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><span name="+k+" >"+htmlDecode(v[3])+"</span>"}';
     s = s+'else if(v[1]==="textarea"){if(v[4]==undefined){v[4]="";}fd=fd+"<label>"+htmlDecode(v[0])+"</label><textarea name="+k+" placeholder="+v[4]+"></textarea>"}';
     s = s+'else if(v[1]==="input"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><input type="+v[2]+" name="+k+" autocomplete=dsb>"}';
-    s = s+'else if(v[1]==="state"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><select name="+k+" id=state_dropdown_field>";';
+    s = s+'else if(v[1]==="state"){';
+    s = s+'if(v[4]!=="US") {';
+    s = s+'    fd=fd1+"<div class=d-none>";';
+    s = s+'}';
+    s = s+'fd=fd+"<label>"+htmlDecode(v[0])+"</label><select name="+k+" id=state_dropdown_field>";';
     s = s+'if(jQuery.type(v[2])=="object"){';
     s = s+'fd=fd+"<option value=0>------</option>";';
     s = s+'states_list = v[2];';
@@ -2151,7 +2156,7 @@ $('body').on('click', '.formpop', function(e) {
     s = s+'$.each(v[2][v[4]] , function(index, val) {var sel="";if(index==v[3]){sel="selected";} fd=fd+"<option "+sel+" value='+"'"+'"+index+"'+"'"+'>"+htmlDecode(val)+"</option>";});}';
     s = s+'}';
     s = s+'fd=fd+"</select>"}';
-    s = s+'else if(v[1]==="interests"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><input type=text class=d-none name="+k+" id=interests_dropdown>";';
+    s = s+'else if(v[1]==="interests"){fd=fd+"<label>"+htmlDecode(v[0])+"</label><input type=text class=d-none name="+k+" id=interests_dropdown value="+v[3]+">";';
     s = s+'fd=fd+"<div class=interest_group>";';
     s = s+'const cur_interests = v[3].split(",");';
     s = s+'$.each(v[2], function(index, val) {const sel = cur_interests.includes(val)?"interest_item selected":"interest_item";fd=fd+"<div class=\'"+sel+"\' value="+val+">"+val+"</div>"});';
@@ -2178,8 +2183,14 @@ $('body').on('click', '.formpop', function(e) {
     s = s+'$(".grupo-pop > div > form > .search > input").focus();';
     s = s+'$(".grupo-pop > div > form > div").scrollTop(0);lazyload();autotimez("run");';
     s = s+'$("#country_dropdown_field").change(function(e) {';
+    s = s+'    $("#state_dropdown_field").parent().addClass("d-none");';
+    s = s+'    if ($(this).val() === "US") {';
+    s = s+'        $("#state_dropdown_field").parent().removeClass("d-none");';
+    s = s+'    } else {';
+    s = s+'        $("#state_dropdown_field").val(0);';
+    s = s+'    }';
     s = s+'    const defaultValue = $("#state_dropdown_field option").first().html();';
-    s = s+'    let dropdown_str = "<option value=0>" + defaultValue + "</option>";';
+    s = s+'    let dropdown_str = "<option value=0 selected>" + defaultValue + "</option>";';
     s = s+'    ';
     s = s+'    if (states_list != undefined && ($(this).val() in states_list)) {';
     s = s+'        const st_list=states_list[$(this).val()];';

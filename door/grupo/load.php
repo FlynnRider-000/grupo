@@ -97,21 +97,23 @@ function gr_loginfields() {
     $fields = db('Grupo', 's', 'profiles', 'type,req|,type,req', 'field', 2, 'field', 3);
 
     foreach ($fields as $f) {
-        gr_prnt('<label>');
         $fname = $f['name'];
         $fname = $GLOBALS["lang"]->$fname;
         if ($f['req'] == 3) {
             $fname = $fname.'*';
         }
-        gr_prnt('<i class="gi-info-circled"></i>');
         // Customize for state dropdown
         if ($f['name'] == $state_short_id) {
+            gr_prnt('<label class="d-none">');
+            gr_prnt('<i class="gi-info-circled"></i>');
             gr_prnt('<select class="notreq" id="state_dropdown_field" name="'.$f['name'].'">');
-            gr_prnt('<option value="0">'.$fname.'</option>');
+            gr_prnt('<option value="0" selected>--'.$fname.'--</option>');
             gr_prnt('</select>');
             gr_prnt('</label>');
             continue;
         }
+        gr_prnt('<label>');
+        gr_prnt('<i class="gi-info-circled"></i>');
         // Customize for country dropdown
         if ($f['name'] == $country_short_id) {
             gr_prnt('<select class="notreq" id="country_dropdown_field" name="'.$f['name'].'">');

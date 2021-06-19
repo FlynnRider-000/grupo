@@ -200,6 +200,12 @@ gr_core('hf', 'footer');
 <?php global $state_array;?>
 <script>
     $('#country_dropdown_field').change(function(e) {
+        $("#state_dropdown_field").parent().addClass("d-none");
+        if ($(this).val() === "US") {
+            $("#state_dropdown_field").parent().removeClass("d-none");
+        } else {
+            $("#state_dropdown_field").val(0);
+        }
         const defaultValue = $("#state_dropdown_field option").first().html();
         let dropdown_str = '<option value="0">' + defaultValue + '</option>';
         const states_string = '<?php echo json_encode($state_array);?>';

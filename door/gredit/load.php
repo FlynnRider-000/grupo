@@ -622,10 +622,10 @@ function gr_edit() {
                             continue;
                         }
                         if ($pf == $state_short_id) {
-                            if (!array_key_exists($arg[1][$country_short_id], $country_array)) {
+                            if (!array_key_exists($arg[1][$country_short_id], $country_array) && $arg[1][$pf] != 0) {
                                 gr_prnt('say("'.$GLOBALS["lang"]->invalid_value.'");'); exit;
                             }
-                            if (!array_key_exists($arg[1][$pf], $state_array[$arg[1][$country_short_id]])) {
+                            if (!array_key_exists($arg[1][$pf], $state_array[$arg[1][$country_short_id]]) && $arg[1][$pf] != 0) {
                                 gr_prnt('say("'.$GLOBALS["lang"]->invalid_value.'");'); exit;
                             }
                             $ct = db('Grupo', 's,count(*)', 'profiles', 'type,name,uid', 'profile', $f['id'], $arg[1]['id'])[0][0];
