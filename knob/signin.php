@@ -173,6 +173,29 @@ $pgload = str_replace('/', '', pg('signin/pg'));
         <span class='pgload'><?php gec($pgload) ?></span>
     </div>
     <div class="signbg"></div>
+    <div class="modal fade page-reload" id="alertModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="alert_modal_heading">Modal Heading</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body" id="alert_modal_body">
+                Modal body..
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" id="alert_modal_button" class="btn btn-danger" data-dismiss="modal">OK</button>
+            </div>
+
+            </div>
+        </div>
+    </div>
     <?php gr_core('hf', 'bodyclose'); ?>
 </body>
 <link href="<?php gec($GLOBALS["default"]->weburl) ?>gem/tone/custom.css" rel="stylesheet">
@@ -187,7 +210,7 @@ $pgload = str_replace('/', '', pg('signin/pg'));
 <?php
 gr_google();
 if (pg('signin') == 'unverified/') {
-    gr_prnt("<script> alert('".$GLOBALS["lang"]->check_inbox."'); </script>");
+    gr_prnt('<script> alertModal("Alert","'.$GLOBALS["lang"]->check_inbox.'","OK", true); </script>');
 }
 gr_core('hf', 'footer');
 ?>
@@ -199,6 +222,19 @@ gr_core('hf', 'footer');
 <!-- Handle for Country/States -->
 <?php global $state_array;?>
 <script>
+    function alertModal(heading, content, button, reload) {
+        $("#alert_modal_heading").html(heading);
+        $("#alert_modal_body").html(content);
+        $("#alert_modal_button").html(button);
+        $("#alertModal").removeClass("page-reload");
+        if (reload) {
+            $("#alertModal").addClass("page-reload");
+        }
+        $("#alertModal").modal();
+    }
+    $('#alertModal.page-reload').on('hidden.bs.modal', function () {
+        window.location.href="";
+    });
     $('#country_dropdown_field').change(function(e) {
         $("#state_dropdown_field").parent().addClass("d-none");
         if ($(this).val() === "US") {

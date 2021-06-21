@@ -797,1084 +797,1115 @@ function gr_list($do) {
             $list[$i]->sub = $GLOBALS["lang"]->language;
             if ($deflang == $f['id']) {
                 $list[$i]->sub = $GLOBALS["lang"]->default;
-                }
+            }
 
-                $list[$i]->rtag = 'type="language" no="'.$f['id'].'"';
-                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                if (isset($GLOBALS["roles"]['languages'][2])) {
-                    $list[$i]->oa = $GLOBALS["lang"]->edit;
-                    $list[$i]->oat = 'class="formpop" title="'.$GLOBALS["lang"]->edit_language.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="language" data-no="'.$f['id'].'"';
-                    if ($f['full'] != 'hide') {
-                        $list[$i]->ob = $GLOBALS["lang"]->hide;
-                        $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->hide_language.'" data-name="'.$f['short'].'" do="language" btn="'.$GLOBALS["lang"]->hide.'" act="hide" data-no="'.$f['id'].'"';
-                    } else {
-                        $list[$i]->ob = $GLOBALS["lang"]->show;
-                        $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->show_language.'" data-name="'.$f['short'].'" do="language" btn="'.$GLOBALS["lang"]->show.'" act="show" data-no="'.$f['id'].'"';
-                    }
-                }
-                if (isset($GLOBALS["roles"]['languages'][3]) && $f['id'] != 1) {
-                    $list[$i]->oc = $GLOBALS["lang"]->delete;
-                    $list[$i]->oct = 'class="formpop" pn=2 title="'.$GLOBALS["lang"]->confirm.'" data-name="'.$f['short'].'" data-no="'.$f['id'].'" do="language" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                }
-                $list[$i]->od = $GLOBALS["lang"]->export;
-                $list[$i]->odt = 'class="deval" act="export"';
-                $list[$i]->icon = "";
-                $list[$i]->id = 'class="language" no="'.$f['id'].'"';
-                $i = $i+1;
-            }
-        } else if ($do["type"] === "complaints") {
-            if (!empty($do['search'])) {
-                $do['search'] = str_replace('comp#', '', $do['search']);
-            }
-            $query = 'SELECT cp.*,rl.v3,';
-            $query = $query.'(SELECT COUNT(id) FROM gr_options WHERE type="gruser" AND v1=cp.id AND v2=:uid) AS grjoin';
-            $query = $query.' FROM gr_complaints cp,gr_options rl WHERE ';
-            if (isset($GLOBALS["roles"]['groups'][7])) {
-                $query = $query.'rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid ';
-                $query = $query.'AND cp.gid=:gid ';
-                if (!empty($do['search'])) {
-                    $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
-                }
-            } else {
-                $query = $query.'rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid AND rl.v3=2 AND cp.msid<>0 ';
-                $query = $query.'AND cp.gid=:gid ';
-                if (!empty($do['search'])) {
-                    $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
-                }
-                $query = $query.'OR rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid AND rl.v3=1 AND cp.msid<>0 ';
-                $query = $query.'AND cp.gid=:gid ';
-                if (!empty($do['search'])) {
-                    $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
-                }
-                $query = $query.'OR rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid AND rl.v3=0 ';
-                $query = $query.'AND cp.uid=:uid AND cp.gid=:gid ';
-                if (!empty($do['search'])) {
-                    $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
-                }
-            }
-            $query = $query.'ORDER BY cp.id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
-            $data = array();
-            $data['uid'] = $uid;
-            $data['gid'] = $do["gid"];
-            if (!empty($do['search'])) {
-                $data['search'] = '%'.$do['search'].'%';
-            }
-            $lists = db('Grupo', 'q', $query, $data);
-            foreach ($lists as $f) {
-                $list[$i] = new stdClass();
-                $list[$i]->img = gr_img('users', $f['uid']);
-                $list[$i]->name = "COMP#".$f['id'];
-                $list[$i]->count = $list[$i]->countag = 0;
-                $list[$i]->sub = $GLOBALS["lang"]->under_investigation;
-                $list[$i]->count = 1;
-                if ($f['status'] == 2) {
-                    $list[$i]->sub = $GLOBALS["lang"]->action_taken;
-                    $list[$i]->count = 0;
-                } else if ($f['status'] == 3) {
-                    $list[$i]->sub = $GLOBALS["lang"]->rejected;
-                    $list[$i]->count = 0;
-                }
-
-                $list[$i]->rtag = 'type="group" no="'.$f['gid'].'"';
-                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-
-                $list[$i]->ob = $GLOBALS["lang"]->view;
-                $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->view_complaint.'" do="group" btn="'.$GLOBALS["lang"]->update.'" act="takeaction" data-no="'.$f['id'].'"';
-                if (!empty($f['msid'])) {
-                    $list[$i]->oa = $GLOBALS["lang"]->proof;
-                    $list[$i]->oat = 'class="turnchat goback" data-block="crew" act="msgs" data-msid="'.$f['msid'].'"';
-                }
-                $list[$i]->icon = "";
-                $list[$i]->id = '';
-                $i = $i+1;
-            }
-        } else if ($do["type"] === "rusers") {
-            if (!isset($GLOBALS["roles"]['roles'][3])) {
-                exit;
-            }
-            $do["xtra"] = vc($do["xtra"], 'num');
-            $query = 'SELECT us.id,us.email,us.role,';
-            if (isset($GLOBALS["roles"]['users'][10])) {
-                $query = $query.'op.v2 AS name,';
-            } else {
-                $query = $query.'us.name AS name,';
-            }
-            $query = $query.'(SELECT st.v2 FROM gr_options st WHERE st.v3=us.id AND st.type="profile" AND st.v1="status") AS status';
-            $query = $query.' FROM gr_users us,gr_options op WHERE us.id=op.v3 AND us.role=:rid ';
-            if (!empty($do['search'])) {
-                if (isset($GLOBALS["roles"]['users'][10])) {
-                    $query = $query.'AND op.v2 LIKE :search ';
+            $list[$i]->rtag = 'type="language" no="'.$f['id'].'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            if (isset($GLOBALS["roles"]['languages'][2])) {
+                $list[$i]->oa = $GLOBALS["lang"]->edit;
+                $list[$i]->oat = 'class="formpop" title="'.$GLOBALS["lang"]->edit_language.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="language" data-no="'.$f['id'].'"';
+                if ($f['full'] != 'hide') {
+                    $list[$i]->ob = $GLOBALS["lang"]->hide;
+                    $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->hide_language.'" data-name="'.$f['short'].'" do="language" btn="'.$GLOBALS["lang"]->hide.'" act="hide" data-no="'.$f['id'].'"';
                 } else {
-                    $query = $query.'AND us.name LIKE :search ';
+                    $list[$i]->ob = $GLOBALS["lang"]->show;
+                    $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->show_language.'" data-name="'.$f['short'].'" do="language" btn="'.$GLOBALS["lang"]->show.'" act="show" data-no="'.$f['id'].'"';
                 }
             }
-            $query = $query.'AND op.type="profile" AND op.v1="name"';
-            $query = $query.' ORDER BY us.id DESC,op.v2 LIMIT '.$lmt.' OFFSET '.$ofs;
-            $data = array();
-            $data['rid'] = $do["xtra"];
-            if (!empty($do['search'])) {
-                $data['search'] = '%'.$do['search'].'%';
-            }
-            $lists = db('Grupo', 'q', $query, $data);
-            foreach ($lists as $f) {
-                $list[$i] = new stdClass();
-                $list[$i]->img = gr_img('users', $f['id']);
-                $list[$i]->name = $f['name'];
-                $list[$i]->count = 0;
-                $list[$i]->sub = $f['email'];
-
-                $list[$i]->rtag = 'type="profile" no="'.$f['id'].'"';
-                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                $list[$i]->oa = $GLOBALS["lang"]->view;
-                $list[$i]->oat = 'class="vwp" no="'.$f['id'].'"';
-                if (isset($GLOBALS["roles"]['users'][6])) {
-                    $list[$i]->ob = $GLOBALS["lang"]->login;
-                    $list[$i]->obt = 'class="deval" act="login"';
-                }
-                if (isset($GLOBALS["roles"]['users'][2]) || isset($GLOBALS["roles"]['users'][3]) || isset($GLOBALS["roles"]['users'][8])) {
-                    $list[$i]->oc = $GLOBALS["lang"]->edit;
-                    $list[$i]->oct = 'class="formpop" data-no="'.$f['id'].'" pn=1 title="'.$GLOBALS["lang"]->edit_profile.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="profile"';
-                }
-                $list[$i]->icon = "'status ".$f['status']."'";
-                $list[$i]->id = 'class="user"';
-                $i = $i+1;
-            }
-        } else if ($do["type"] === "iplogs") {
-            if (!isset($GLOBALS["roles"]['users'][9])) {
-                exit;
-            }
-            $do["xtra"] = vc($do["xtra"], 'num');
-            $query = 'SELECT id,ip,dev,uid,tms,';
-            $query = $query.'(SELECT IFNULL((SELECT CASE WHEN tz.v2="Auto" THEN ';
-            $query = $query.'(SELECT am.v2 FROM gr_options am WHERE am.type="profile" AND am.v1="autotmz" AND am.v3=tz.v3)';
-            $query = $query.' ELSE tz.v2 END AS timz FROM gr_options tz WHERE tz.type="profile" AND tz.v1="tmz" AND tz.v3=:usid),';
-            $query = $query.':tmz)) AS timezone';
-            $query = $query.' FROM gr_utrack WHERE uid=:uid';
-            if (!empty($do['search'])) {
-                $query = $query.' AND ip LIKE :search';
-            }
-            $query = $query.' ORDER BY gr_utrack.tms DESC LIMIT '.$lmt.' OFFSET '.$ofs;
-            $data = array();
-            $data['uid'] = $do["xtra"];
-            $data['usid'] = $uid;
-            $data['tmz'] = $GLOBALS["default"]->timezone;
-            if (!empty($do['search'])) {
-                $data['search'] = '%'.$do['search'].'%';
-            }
-            $lists = db('Grupo', 'q', $query, $data);
-            foreach ($lists as $f) {
-                $list[$i] = new stdClass();
-                $list[$i]->img = $GLOBALS["default"]->weburl.'gem/ore/grupo/icons/iplog.svg';
-                $list[$i]->name = $f['ip'];
-                if ($list[$i]->name == '::1') {
-                    $list[$i]->name = '127.0.0.1';
-                }
-                $list[$i]->icon = "";
-                $tms = new DateTime($f['tms']);
-                $tmz = new DateTimeZone($f['timezone']);
-                $tms->setTimezone($tmz);
-                $tmst = strtotime($tms->format('Y-m-d H:i:s'));
-                if ($GLOBALS["default"]->time_format == 24) {
-                    $tformat = 'H:i';
-                } else {
-                    $tformat = 'h:i a';
-                }
-                if ($GLOBALS["default"]->dateformat == 'mdy') {
-                    $dformat = 'M-d-y';
-                } else if ($GLOBALS["default"]->dateformat == 'ymd') {
-                    $dformat = 'y-M-d';
-                } else {
-                    $dformat = 'd-M-y';
-                }
-                $list[$i]->name = $list[$i]->name.' - '.$tms->format($dformat.' '.$tformat);
-                $list[$i]->count = 0;
-                $ipxt = ipxtract($f['dev']);
-                $list[$i]->sub = $ipxt['os'].' - '.$ipxt['browser'];
-                $list[$i]->rtag = 'type="iplog" no="'.$f['id'].'"';
-                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                $list[$i]->oa = $GLOBALS["lang"]->delete;
-                $list[$i]->oat = 'class="formpop" pn=2 title="'.$GLOBALS["lang"]->confirm.'" data-no="'.$f['id'].'" do="profile" btn="'.$GLOBALS["lang"]->delete.'" act="iplogdelete"';
-                $list[$i]->id = 'class="user"';
-                $i = $i+1;
-            }
-        } else if ($do["type"] === "manageads") {
-            if (!isset($GLOBALS["roles"]['sys'][7])) {
-                exit;
-            }
-            $list[0]->shw = 'shw';
-            $list[0]->icn = 'gi-plus';
-            $list[0]->mnu = 'udolist';
-            $list[0]->act = 'ads';
-            $query = 'SELECT id,name,adslot';
-            $query = $query.' FROM gr_ads';
-            if (!empty($do['search'])) {
-                $query = $query.' WHERE name LIKE :search';
-            }
-            $query = $query.' ORDER BY id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
-            $data = array();
-            if (!empty($do['search'])) {
-                $data['search'] = '%'.$do['search'].'%';
-            }
-            $lists = db('Grupo', 'q', $query, $data);
-            foreach ($lists as $f) {
-                $list[$i] = new stdClass();
-                $list[$i]->img = $GLOBALS["default"]->weburl.'gem/ore/grupo/icons/ads.svg';
-                $list[$i]->name = $f['name'];
-                $list[$i]->icon = "";
-                $list[$i]->count = 0;
-                $adslot = $f['adslot'];
-                $list[$i]->sub = $GLOBALS["lang"]->$adslot;
-                $list[$i]->rtag = 'type="ads" no="'.$f['id'].'"';
-                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                $list[$i]->ob = $GLOBALS["lang"]->edit;
-                $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_ad.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="ads" data-no="'.$f['id'].'"';
+            if (isset($GLOBALS["roles"]['languages'][3]) && $f['id'] != 1) {
                 $list[$i]->oc = $GLOBALS["lang"]->delete;
-                $list[$i]->oct = 'class="formpop" data-name="'.$f['name'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="ads" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                $list[$i]->id = 'class="ads"';
-                $i = $i+1;
+                $list[$i]->oct = 'class="formpop" pn=2 title="'.$GLOBALS["lang"]->confirm.'" data-name="'.$f['short'].'" data-no="'.$f['id'].'" do="language" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
             }
-        } else if ($do["type"] === "stickerpacks") {
-            if (!isset($GLOBALS["roles"]['features'][16])) {
-                exit;
-            }
-            $list[0]->shw = 'shw';
-            $list[0]->icn = 'gi-plus';
-            $list[0]->mnu = 'udolist';
-            $list[0]->act = 'stickerpack';
+            $list[$i]->od = $GLOBALS["lang"]->export;
+            $list[$i]->odt = 'class="deval" act="export"';
+            $list[$i]->icon = "";
+            $list[$i]->id = 'class="language" no="'.$f['id'].'"';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "complaints") {
+        if (!empty($do['search'])) {
+            $do['search'] = str_replace('comp#', '', $do['search']);
+        }
+        $query = 'SELECT cp.*,rl.v3,';
+        $query = $query.'(SELECT COUNT(id) FROM gr_options WHERE type="gruser" AND v1=cp.id AND v2=:uid) AS grjoin';
+        $query = $query.' FROM gr_complaints cp,gr_options rl WHERE ';
+        if (isset($GLOBALS["roles"]['groups'][7])) {
+            $query = $query.'rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid ';
+            $query = $query.'AND cp.gid=:gid ';
             if (!empty($do['search'])) {
-                $do['search'] = stripslashes(str_replace('/', '', $do['search']));
-                $dir = 'grupo/stickers/*'.$do['search'].'*';
-            } else {
-                $dir = 'grupo/stickers/';
+                $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
             }
-            $r = flr('list', $dir, 1);
-            $r = array_slice($r, $ofs, $lmt);
-            foreach ($r as $f) {
+        } else {
+            $query = $query.'rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid AND rl.v3=2 AND cp.msid<>0 ';
+            $query = $query.'AND cp.gid=:gid ';
+            if (!empty($do['search'])) {
+                $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
+            }
+            $query = $query.'OR rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid AND rl.v3=1 AND cp.msid<>0 ';
+            $query = $query.'AND cp.gid=:gid ';
+            if (!empty($do['search'])) {
+                $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
+            }
+            $query = $query.'OR rl.type="gruser" AND rl.v1=cp.gid AND rl.v2=:uid AND rl.v3=0 ';
+            $query = $query.'AND cp.uid=:uid AND cp.gid=:gid ';
+            if (!empty($do['search'])) {
+                $query = $query.'AND cp.id LIKE "%'.$do['search'].'%" ';
+            }
+        }
+        $query = $query.'ORDER BY cp.id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
+        $data = array();
+        $data['uid'] = $uid;
+        $data['gid'] = $do["gid"];
+        if (!empty($do['search'])) {
+            $data['search'] = '%'.$do['search'].'%';
+        }
+        $lists = db('Grupo', 'q', $query, $data);
+        foreach ($lists as $f) {
+            $list[$i] = new stdClass();
+            $list[$i]->img = gr_img('users', $f['uid']);
+            $list[$i]->name = "COMP#".$f['id'];
+            $list[$i]->count = $list[$i]->countag = 0;
+            $list[$i]->sub = $GLOBALS["lang"]->under_investigation;
+            $list[$i]->count = 1;
+            if ($f['status'] == 2) {
+                $list[$i]->sub = $GLOBALS["lang"]->action_taken;
+                $list[$i]->count = 0;
+            } else if ($f['status'] == 3) {
+                $list[$i]->sub = $GLOBALS["lang"]->rejected;
+                $list[$i]->count = 0;
+            }
+
+            $list[$i]->rtag = 'type="group" no="'.$f['gid'].'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+
+            $list[$i]->ob = $GLOBALS["lang"]->view;
+            $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->view_complaint.'" do="group" btn="'.$GLOBALS["lang"]->update.'" act="takeaction" data-no="'.$f['id'].'"';
+            if (!empty($f['msid'])) {
+                $list[$i]->oa = $GLOBALS["lang"]->proof;
+                $list[$i]->oat = 'class="turnchat goback" data-block="crew" act="msgs" data-msid="'.$f['msid'].'"';
+            }
+            $list[$i]->icon = "";
+            $list[$i]->id = '';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "rusers") {
+        if (!isset($GLOBALS["roles"]['roles'][3])) {
+            exit;
+        }
+        $do["xtra"] = vc($do["xtra"], 'num');
+        $query = 'SELECT us.id,us.email,us.role,';
+        if (isset($GLOBALS["roles"]['users'][10])) {
+            $query = $query.'op.v2 AS name,';
+        } else {
+            $query = $query.'us.name AS name,';
+        }
+        $query = $query.'(SELECT st.v2 FROM gr_options st WHERE st.v3=us.id AND st.type="profile" AND st.v1="status") AS status';
+        $query = $query.' FROM gr_users us,gr_options op WHERE us.id=op.v3 AND us.role=:rid ';
+        if (!empty($do['search'])) {
+            if (isset($GLOBALS["roles"]['users'][10])) {
+                $query = $query.'AND op.v2 LIKE :search ';
+            } else {
+                $query = $query.'AND us.name LIKE :search ';
+            }
+        }
+        $query = $query.'AND op.type="profile" AND op.v1="name"';
+        $query = $query.' ORDER BY us.id DESC,op.v2 LIMIT '.$lmt.' OFFSET '.$ofs;
+        $data = array();
+        $data['rid'] = $do["xtra"];
+        if (!empty($do['search'])) {
+            $data['search'] = '%'.$do['search'].'%';
+        }
+        $lists = db('Grupo', 'q', $query, $data);
+        foreach ($lists as $f) {
+            $list[$i] = new stdClass();
+            $list[$i]->img = gr_img('users', $f['id']);
+            $list[$i]->name = $f['name'];
+            $list[$i]->count = 0;
+            $list[$i]->sub = $f['email'];
+
+            $list[$i]->rtag = 'type="profile" no="'.$f['id'].'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            $list[$i]->oa = $GLOBALS["lang"]->view;
+            $list[$i]->oat = 'class="vwp" no="'.$f['id'].'"';
+            if (isset($GLOBALS["roles"]['users'][6])) {
+                $list[$i]->ob = $GLOBALS["lang"]->login;
+                $list[$i]->obt = 'class="deval" act="login"';
+            }
+            if (isset($GLOBALS["roles"]['users'][2]) || isset($GLOBALS["roles"]['users'][3]) || isset($GLOBALS["roles"]['users'][8])) {
+                $list[$i]->oc = $GLOBALS["lang"]->edit;
+                $list[$i]->oct = 'class="formpop" data-no="'.$f['id'].'" pn=1 title="'.$GLOBALS["lang"]->edit_profile.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="profile"';
+            }
+            $list[$i]->icon = "'status ".$f['status']."'";
+            $list[$i]->id = 'class="user"';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "iplogs") {
+        if (!isset($GLOBALS["roles"]['users'][9])) {
+            exit;
+        }
+        $do["xtra"] = vc($do["xtra"], 'num');
+        $query = 'SELECT id,ip,dev,uid,tms,';
+        $query = $query.'(SELECT IFNULL((SELECT CASE WHEN tz.v2="Auto" THEN ';
+        $query = $query.'(SELECT am.v2 FROM gr_options am WHERE am.type="profile" AND am.v1="autotmz" AND am.v3=tz.v3)';
+        $query = $query.' ELSE tz.v2 END AS timz FROM gr_options tz WHERE tz.type="profile" AND tz.v1="tmz" AND tz.v3=:usid),';
+        $query = $query.':tmz)) AS timezone';
+        $query = $query.' FROM gr_utrack WHERE uid=:uid';
+        if (!empty($do['search'])) {
+            $query = $query.' AND ip LIKE :search';
+        }
+        $query = $query.' ORDER BY gr_utrack.tms DESC LIMIT '.$lmt.' OFFSET '.$ofs;
+        $data = array();
+        $data['uid'] = $do["xtra"];
+        $data['usid'] = $uid;
+        $data['tmz'] = $GLOBALS["default"]->timezone;
+        if (!empty($do['search'])) {
+            $data['search'] = '%'.$do['search'].'%';
+        }
+        $lists = db('Grupo', 'q', $query, $data);
+        foreach ($lists as $f) {
+            $list[$i] = new stdClass();
+            $list[$i]->img = $GLOBALS["default"]->weburl.'gem/ore/grupo/icons/iplog.svg';
+            $list[$i]->name = $f['ip'];
+            if ($list[$i]->name == '::1') {
+                $list[$i]->name = '127.0.0.1';
+            }
+            $list[$i]->icon = "";
+            $tms = new DateTime($f['tms']);
+            $tmz = new DateTimeZone($f['timezone']);
+            $tms->setTimezone($tmz);
+            $tmst = strtotime($tms->format('Y-m-d H:i:s'));
+            if ($GLOBALS["default"]->time_format == 24) {
+                $tformat = 'H:i';
+            } else {
+                $tformat = 'h:i a';
+            }
+            if ($GLOBALS["default"]->dateformat == 'mdy') {
+                $dformat = 'M-d-y';
+            } else if ($GLOBALS["default"]->dateformat == 'ymd') {
+                $dformat = 'y-M-d';
+            } else {
+                $dformat = 'd-M-y';
+            }
+            $list[$i]->name = $list[$i]->name.' - '.$tms->format($dformat.' '.$tformat);
+            $list[$i]->count = 0;
+            $ipxt = ipxtract($f['dev']);
+            $list[$i]->sub = $ipxt['os'].' - '.$ipxt['browser'];
+            $list[$i]->rtag = 'type="iplog" no="'.$f['id'].'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            $list[$i]->oa = $GLOBALS["lang"]->delete;
+            $list[$i]->oat = 'class="formpop" pn=2 title="'.$GLOBALS["lang"]->confirm.'" data-no="'.$f['id'].'" do="profile" btn="'.$GLOBALS["lang"]->delete.'" act="iplogdelete"';
+            $list[$i]->id = 'class="user"';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "manageads") {
+        if (!isset($GLOBALS["roles"]['sys'][7])) {
+            exit;
+        }
+        $list[0]->shw = 'shw';
+        $list[0]->icn = 'gi-plus';
+        $list[0]->mnu = 'udolist';
+        $list[0]->act = 'ads';
+        $query = 'SELECT id,name,adslot';
+        $query = $query.' FROM gr_ads';
+        if (!empty($do['search'])) {
+            $query = $query.' WHERE name LIKE :search';
+        }
+        $query = $query.' ORDER BY id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
+        $data = array();
+        if (!empty($do['search'])) {
+            $data['search'] = '%'.$do['search'].'%';
+        }
+        $lists = db('Grupo', 'q', $query, $data);
+        foreach ($lists as $f) {
+            $list[$i] = new stdClass();
+            $list[$i]->img = $GLOBALS["default"]->weburl.'gem/ore/grupo/icons/ads.svg';
+            $list[$i]->name = $f['name'];
+            $list[$i]->icon = "";
+            $list[$i]->count = 0;
+            $adslot = $f['adslot'];
+            $list[$i]->sub = $GLOBALS["lang"]->$adslot;
+            $list[$i]->rtag = 'type="ads" no="'.$f['id'].'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            $list[$i]->ob = $GLOBALS["lang"]->edit;
+            $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_ad.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="ads" data-no="'.$f['id'].'"';
+            $list[$i]->oc = $GLOBALS["lang"]->delete;
+            $list[$i]->oct = 'class="formpop" data-name="'.$f['name'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="ads" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+            $list[$i]->id = 'class="ads"';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "stickerpacks") {
+        if (!isset($GLOBALS["roles"]['features'][16])) {
+            exit;
+        }
+        $list[0]->shw = 'shw';
+        $list[0]->icn = 'gi-plus';
+        $list[0]->mnu = 'udolist';
+        $list[0]->act = 'stickerpack';
+        if (!empty($do['search'])) {
+            $do['search'] = stripslashes(str_replace('/', '', $do['search']));
+            $dir = 'grupo/stickers/*'.$do['search'].'*';
+        } else {
+            $dir = 'grupo/stickers/';
+        }
+        $r = flr('list', $dir, 1);
+        $r = array_slice($r, $ofs, $lmt);
+        foreach ($r as $f) {
+            $list[$i] = new stdClass();
+            $n = basename($f);
+            $list[$i]->img = $GLOBALS["default"]->weburl."gem/ore/grupo/icons/stickers.svg";
+            $im = "gem/ore/grupo/stickers/".$n."/grstickericon.png";
+            if (file_exists($im)) {
+                $list[$i]->img = '"'.$GLOBALS["default"]->weburl.$im.'"';
+            }
+            $list[$i]->name = $n;
+            $list[$i]->sub = $GLOBALS["lang"]->stickerpack;
+            $list[$i]->count = '0';
+            $list[$i]->rtag = 'type="stickers" no="'.$n.'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            $list[$i]->oa = $GLOBALS["lang"]->view;
+            $list[$i]->oat = 'class="mbopen loadside" xtra="'.$n.'" tabtitle="'.$GLOBALS["lang"]->stickers.'" data-block="lside" act="stickers" side="lside" zero="0" zval="'.$GLOBALS["lang"]->zero_stickers.'"';
+            $list[$i]->ob = $GLOBALS["lang"]->edit;
+            $list[$i]->obt = 'class="formpop" data-no="'.$n.'" pn=1 title="'.$GLOBALS["lang"]->edit_stickerpack.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="stickerpack"';
+            $list[$i]->oc = $GLOBALS["lang"]->delete;
+            $list[$i]->oct = 'class="formpop" data-no="'.$n.'" pn=1 title="'.$GLOBALS["lang"]->confirm.'" do="stickers"  btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+            $list[$i]->icon = "";
+            $list[$i]->id = 'class="sticker"';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "stickers") {
+        $do['xtra'] = preg_replace('/[^a-z0-9 ]/i', '', $_POST['xtra']);
+        if (!isset($GLOBALS["roles"]['features'][16]) || empty($do['xtra'])) {
+            exit;
+        }
+        $list[0]->shw = 'shw';
+        $list[0]->icn = 'gi-plus';
+        $list[0]->mnu = 'udolist';
+        $list[0]->act = 'stickers';
+        if (!empty($do['search'])) {
+            $do['search'] = stripslashes(str_replace('/', '', $do['search']));
+            $dir = 'grupo/stickers/'.$do['xtra'].'/*'.$do['search'].'*.{jpg,png,gif,bmp,jpeg}';
+        } else {
+            $dir = 'grupo/stickers/'.$do['xtra'].'/*.{jpg,png,gif,bmp,jpeg}';
+        }
+        $r = flr('list', $dir, 'brace');
+        $r = array_slice($r, $ofs, $lmt);
+        foreach ($r as $f) {
+            $n = basename($f);
+            if ($n != 'grstickericon.png') {
                 $list[$i] = new stdClass();
-                $n = basename($f);
-                $list[$i]->img = $GLOBALS["default"]->weburl."gem/ore/grupo/icons/stickers.svg";
-                $im = "gem/ore/grupo/stickers/".$n."/grstickericon.png";
-                if (file_exists($im)) {
-                    $list[$i]->img = '"'.$GLOBALS["default"]->weburl.$im.'"';
+                $list[$i]->img = '"'.$GLOBALS["default"]->weburl."gem/ore/grupo/stickers/".$do['xtra']."/".$n.'"';
+                $sticker = explode('-gr-', $n, 2);
+                if (isset($sticker[1])) {
+                    $list[$i]->name = $sticker[1];
+                } else {
+                    $list[$i]->name = $n;
                 }
-                $list[$i]->name = $n;
-                $list[$i]->sub = $GLOBALS["lang"]->stickerpack;
+                $list[$i]->sub = $do['xtra'];
                 $list[$i]->count = '0';
                 $list[$i]->rtag = 'type="stickers" no="'.$n.'"';
                 $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                $list[$i]->oa = $GLOBALS["lang"]->view;
-                $list[$i]->oat = 'class="mbopen loadside" xtra="'.$n.'" tabtitle="'.$GLOBALS["lang"]->stickers.'" data-block="lside" act="stickers" side="lside" zero="0" zval="'.$GLOBALS["lang"]->zero_stickers.'"';
-                $list[$i]->ob = $GLOBALS["lang"]->edit;
-                $list[$i]->obt = 'class="formpop" data-no="'.$n.'" pn=1 title="'.$GLOBALS["lang"]->edit_stickerpack.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="stickerpack"';
                 $list[$i]->oc = $GLOBALS["lang"]->delete;
-                $list[$i]->oct = 'class="formpop" data-no="'.$n.'" pn=1 title="'.$GLOBALS["lang"]->confirm.'" do="stickers"  btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+                $list[$i]->oct = 'class="formpop" data-name="'.$list[$i]->name.'" data-no="'.$do['xtra'].'/'.$n.'" title="'.$GLOBALS["lang"]->confirm.'" do="stickers"  btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
                 $list[$i]->icon = "";
                 $list[$i]->id = 'class="sticker"';
                 $i = $i+1;
             }
-        } else if ($do["type"] === "stickers") {
-            $do['xtra'] = preg_replace('/[^a-z0-9 ]/i', '', $_POST['xtra']);
-            if (!isset($GLOBALS["roles"]['features'][16]) || empty($do['xtra'])) {
-                exit;
-            }
-            $list[0]->shw = 'shw';
-            $list[0]->icn = 'gi-plus';
-            $list[0]->mnu = 'udolist';
-            $list[0]->act = 'stickers';
-            if (!empty($do['search'])) {
-                $do['search'] = stripslashes(str_replace('/', '', $do['search']));
-                $dir = 'grupo/stickers/'.$do['xtra'].'/*'.$do['search'].'*.{jpg,png,gif,bmp,jpeg}';
-            } else {
-                $dir = 'grupo/stickers/'.$do['xtra'].'/*.{jpg,png,gif,bmp,jpeg}';
-            }
-            $r = flr('list', $dir, 'brace');
-            $r = array_slice($r, $ofs, $lmt);
-            foreach ($r as $f) {
-                $n = basename($f);
-                if ($n != 'grstickericon.png') {
-                    $list[$i] = new stdClass();
-                    $list[$i]->img = '"'.$GLOBALS["default"]->weburl."gem/ore/grupo/stickers/".$do['xtra']."/".$n.'"';
-                    $sticker = explode('-gr-', $n, 2);
-                    if (isset($sticker[1])) {
-                        $list[$i]->name = $sticker[1];
-                    } else {
-                        $list[$i]->name = $n;
-                    }
-                    $list[$i]->sub = $do['xtra'];
-                    $list[$i]->count = '0';
-                    $list[$i]->rtag = 'type="stickers" no="'.$n.'"';
-                    $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                    $list[$i]->oc = $GLOBALS["lang"]->delete;
-                    $list[$i]->oct = 'class="formpop" data-name="'.$list[$i]->name.'" data-no="'.$do['xtra'].'/'.$n.'" title="'.$GLOBALS["lang"]->confirm.'" do="stickers"  btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                    $list[$i]->icon = "";
-                    $list[$i]->id = 'class="sticker"';
-                    $i = $i+1;
-                }
-            }
-        } else if ($do["type"] === "lastseen") {
-            if (isset($do['gmid']) && !empty($do['gmid'])) {
-                $do['gmid'] = vc($do['gmid'], 'num');
-                $query = 'SELECT gr.v2,';
-                if (isset($GLOBALS["roles"]['users'][10])) {
-                    $query = $query.'(SELECT op.v2 FROM gr_options op WHERE type="profile" AND op.v1="name" AND op.v3=gr.v2 LIMIT 1) AS name,';
-                } else {
-                    $query = $query.'(SELECT name FROM gr_users WHERE id=gr.v2 LIMIT 1) AS name,';
-                }
-                $query = $query.'(SELECT st.v2 FROM gr_options st WHERE st.v3=gr.v2 AND st.type="profile" AND st.v1="status") AS status,';
-                $query = $query.'(SELECT count(cm.id) FROM gr_msgs cm WHERE cm.id=:msid AND cm.uid=:uid) AS verfy';
-                $query = $query.' FROM gr_options gr WHERE gr.type="lview" AND gr.v1=:gid';
-                if (!empty($do['search'])) {
-                    if (isset($GLOBALS["roles"]['users'][10])) {
-                        $query = $query.' AND (SELECT op.v2 FROM gr_options op WHERE type="profile" AND op.v1="name" AND op.v3=gr.v2 LIMIT 1) LIKE :search';
-                    } else {
-                        $query = $query.' AND (SELECT name FROM gr_users WHERE id=gr.v2 LIMIT 1)  LIKE :search';
-                    }
-                }
-                $query = $query.' AND CAST(gr.v3 AS SIGNED)>=:msid AND gr.v2<>:uid ORDER BY name ASC LIMIT '.$lmt.' OFFSET '.$ofs;
-                $data = array();
-                $data['uid'] = $uid;
-                $data['gid'] = $do["gid"];
-                $data['msid'] = $do["gmid"];
-                if (!empty($do['search'])) {
-                    $data['search'] = '%'.$do['search'].'%';
-                }
-                $lists = db('Grupo', 'q', $query, $data);
-                foreach ($lists as $f) {
-                    if ($f['verfy'] != 0) {
-                        $list[$i] = new stdClass();
-                        $list[$i]->img = gr_img('users', $f['v2']);
-                        $list[$i]->name = $f['name'];
-                        $list[$i]->count = 0;
-                        $varky = $f['status'];
-                        $list[$i]->sub = $GLOBALS["lang"]->$varky;
-
-                        $list[$i]->rtag = 'type="profile" no="'.$f['v2'].'"';
-                        $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                        $list[$i]->oa = $GLOBALS["lang"]->view;
-                        $list[$i]->oat = 'class="vwp" no="'.$f['v2'].'"';
-                        if (isset($GLOBALS["roles"]['privatemsg'][1]) && $f['v2'] != $uid) {
-                            $list[$i]->ob = $GLOBALS["lang"]->chat;
-                            $list[$i]->obt = 'class="loadgroup paj" ldt="user" no="'.$f['v2'].'"';
-                        }
-                        $list[$i]->icon = "'status ".$f['status']."'";
-                        $list[$i]->id = 'class="user"';
-                        $i = $i+1;
-                    }
-                }
-            }
-        } else if ($do["type"] === "online") {
-            if (!isset($GLOBALS["roles"]['users'][5])) {
-                exit;
-            }
-            $query = 'SELECT us.name,st.v3,st.tms,st.v2,';
+        }
+    } else if ($do["type"] === "lastseen") {
+        if (isset($do['gmid']) && !empty($do['gmid'])) {
+            $do['gmid'] = vc($do['gmid'], 'num');
+            $query = 'SELECT gr.v2,';
             if (isset($GLOBALS["roles"]['users'][10])) {
-                $query = $query.'op.v2 AS fname ';
+                $query = $query.'(SELECT op.v2 FROM gr_options op WHERE type="profile" AND op.v1="name" AND op.v3=gr.v2 LIMIT 1) AS name,';
             } else {
-                $query = $query.'us.name AS fname ';
+                $query = $query.'(SELECT name FROM gr_users WHERE id=gr.v2 LIMIT 1) AS name,';
             }
-            $query = $query.'FROM gr_options op, gr_options st, ';
-            $query = $query.'gr_users us WHERE st.v3 = op.v3 AND st.v3 = us.id AND st.v3 <> :uid ';
+            $query = $query.'(SELECT st.v2 FROM gr_options st WHERE st.v3=gr.v2 AND st.type="profile" AND st.v1="status") AS status,';
+            $query = $query.'(SELECT count(cm.id) FROM gr_msgs cm WHERE cm.id=:msid AND cm.uid=:uid) AS verfy';
+            $query = $query.' FROM gr_options gr WHERE gr.type="lview" AND gr.v1=:gid';
             if (!empty($do['search'])) {
                 if (isset($GLOBALS["roles"]['users'][10])) {
-                    $query = $query.'AND op.v2 LIKE :search ';
+                    $query = $query.' AND (SELECT op.v2 FROM gr_options op WHERE type="profile" AND op.v1="name" AND op.v3=gr.v2 LIMIT 1) LIKE :search';
                 } else {
-                    $query = $query.'AND us.name LIKE :search ';
+                    $query = $query.' AND (SELECT name FROM gr_users WHERE id=gr.v2 LIMIT 1)  LIKE :search';
                 }
             }
-            $query = $query.'AND st.v1="status" AND st.v2="online" AND st.type="profile" AND op.type="profile" ';
-            $query = $query.'AND op.v1="name" OR st.v3 = op.v3 AND st.v3 = us.id AND st.v3 <> :uid ';
-            if (!empty($do['search'])) {
-                if (isset($GLOBALS["roles"]['users'][10])) {
-                    $query = $query.'AND op.v2 LIKE :search ';
-                } else {
-                    $query = $query.'AND us.name LIKE :search ';
-                }
-            }
-            $query = $query.'AND st.v1="status" AND st.v2="idle" AND st.type="profile" AND op.type="profile" ';
-            $query = $query.'AND op.v1="name" ORDER BY st.v2 DESC LIMIT '.$lmt.' OFFSET '.$ofs;
+            $query = $query.' AND CAST(gr.v3 AS SIGNED)>=:msid AND gr.v2<>:uid ORDER BY name ASC LIMIT '.$lmt.' OFFSET '.$ofs;
             $data = array();
             $data['uid'] = $uid;
+            $data['gid'] = $do["gid"];
+            $data['msid'] = $do["gmid"];
             if (!empty($do['search'])) {
                 $data['search'] = '%'.$do['search'].'%';
             }
-            $r = db('Grupo', 'q', $query, $data);
-            foreach ($r as $f) {
-                $list[$i] = new stdClass();
-                $list[$i]->img = gr_img('users', $f['v3']);
-                $list[$i]->name = $f['fname'];
-                $list[$i]->count = 0;
-                $list[$i]->sub = '';
-                $list[$i]->user = '';
-                $list[$i]->sub = '@'.$f['name'];
+            $lists = db('Grupo', 'q', $query, $data);
+            foreach ($lists as $f) {
+                if ($f['verfy'] != 0) {
+                    $list[$i] = new stdClass();
+                    $list[$i]->img = gr_img('users', $f['v2']);
+                    $list[$i]->name = $f['name'];
+                    $list[$i]->count = 0;
+                    $varky = $f['status'];
+                    $list[$i]->sub = $GLOBALS["lang"]->$varky;
 
-                $list[$i]->rtag = 'type="profile" no="'.$f['v3'].'"';
-                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                $list[$i]->oa = $GLOBALS["lang"]->view;
-                $list[$i]->oat = 'class="vwp" no="'.$f['v3'].'"';
-                if (isset($GLOBALS["roles"]['privatemsg'][1])) {
-                    $list[$i]->ob = $GLOBALS["lang"]->chat;
-                    $list[$i]->obt = 'class="loadgroup paj" ldt="user" no="'.$f['v3'].'"';
+                    $list[$i]->rtag = 'type="profile" no="'.$f['v2'].'"';
+                    $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+                    $list[$i]->oa = $GLOBALS["lang"]->view;
+                    $list[$i]->oat = 'class="vwp" no="'.$f['v2'].'"';
+                    if (isset($GLOBALS["roles"]['privatemsg'][1]) && $f['v2'] != $uid) {
+                        $list[$i]->ob = $GLOBALS["lang"]->chat;
+                        $list[$i]->obt = 'class="loadgroup paj" ldt="user" no="'.$f['v2'].'"';
+                    }
+                    $list[$i]->icon = "'status ".$f['status']."'";
+                    $list[$i]->id = 'class="user"';
+                    $i = $i+1;
                 }
-                if (isset($GLOBALS["roles"]['users'][2]) || isset($GLOBALS["roles"]['users'][3]) || isset($GLOBALS["roles"]['users'][8])) {
-                    $list[$i]->oc = $GLOBALS["lang"]->edit;
-                    $list[$i]->oct = 'class="formpop" data-no="'.$f['v3'].'" pn=1 title="'.$GLOBALS["lang"]->edit_profile.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="profile"';
-                }
-                $list[$i]->icon = "'status ".$f['v2']."'";
-                $list[$i]->id = 'class="online"';
-                $i = $i+1;
             }
-        } else if ($do["type"] === "roles") {
-            if (!isset($GLOBALS["roles"]['roles'][3])) {
-                exit;
+        }
+    } else if ($do["type"] === "online") {
+        if (!isset($GLOBALS["roles"]['users'][5])) {
+            exit;
+        }
+        $query = 'SELECT us.name,st.v3,st.tms,st.v2,';
+        if (isset($GLOBALS["roles"]['users'][10])) {
+            $query = $query.'op.v2 AS fname ';
+        } else {
+            $query = $query.'us.name AS fname ';
+        }
+        $query = $query.'FROM gr_options op, gr_options st, ';
+        $query = $query.'gr_users us WHERE st.v3 = op.v3 AND st.v3 = us.id AND st.v3 <> :uid ';
+        if (!empty($do['search'])) {
+            if (isset($GLOBALS["roles"]['users'][10])) {
+                $query = $query.'AND op.v2 LIKE :search ';
+            } else {
+                $query = $query.'AND us.name LIKE :search ';
             }
-            if (isset($GLOBALS["roles"]['roles'][1])) {
+        }
+        $query = $query.'AND st.v1="status" AND st.v2="online" AND st.type="profile" AND op.type="profile" ';
+        $query = $query.'AND op.v1="name" OR st.v3 = op.v3 AND st.v3 = us.id AND st.v3 <> :uid ';
+        if (!empty($do['search'])) {
+            if (isset($GLOBALS["roles"]['users'][10])) {
+                $query = $query.'AND op.v2 LIKE :search ';
+            } else {
+                $query = $query.'AND us.name LIKE :search ';
+            }
+        }
+        $query = $query.'AND st.v1="status" AND st.v2="idle" AND st.type="profile" AND op.type="profile" ';
+        $query = $query.'AND op.v1="name" ORDER BY st.v2 DESC LIMIT '.$lmt.' OFFSET '.$ofs;
+        $data = array();
+        $data['uid'] = $uid;
+        if (!empty($do['search'])) {
+            $data['search'] = '%'.$do['search'].'%';
+        }
+        $r = db('Grupo', 'q', $query, $data);
+        foreach ($r as $f) {
+            $list[$i] = new stdClass();
+            $list[$i]->img = gr_img('users', $f['v3']);
+            $list[$i]->name = $f['fname'];
+            $list[$i]->count = 0;
+            $list[$i]->sub = '';
+            $list[$i]->user = '';
+            $list[$i]->sub = '@'.$f['name'];
+
+            $list[$i]->rtag = 'type="profile" no="'.$f['v3'].'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            $list[$i]->oa = $GLOBALS["lang"]->view;
+            $list[$i]->oat = 'class="vwp" no="'.$f['v3'].'"';
+            if (isset($GLOBALS["roles"]['privatemsg'][1])) {
+                $list[$i]->ob = $GLOBALS["lang"]->chat;
+                $list[$i]->obt = 'class="loadgroup paj" ldt="user" no="'.$f['v3'].'"';
+            }
+            if (isset($GLOBALS["roles"]['users'][2]) || isset($GLOBALS["roles"]['users'][3]) || isset($GLOBALS["roles"]['users'][8])) {
+                $list[$i]->oc = $GLOBALS["lang"]->edit;
+                $list[$i]->oct = 'class="formpop" data-no="'.$f['v3'].'" pn=1 title="'.$GLOBALS["lang"]->edit_profile.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="profile"';
+            }
+            $list[$i]->icon = "'status ".$f['v2']."'";
+            $list[$i]->id = 'class="online"';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "roles") {
+        if (!isset($GLOBALS["roles"]['roles'][3])) {
+            exit;
+        }
+        if (isset($GLOBALS["roles"]['roles'][1])) {
+            $list[0]->shw = 'shw';
+            $list[0]->icn = 'gi-plus';
+            $list[0]->mnu = 'udolist';
+            $list[0]->act = 'role';
+        }
+        $query = 'SELECT rl.id,rl.name,(SELECT count(1) FROM gr_users us WHERE us.role=rl.id)';
+        $query = $query.' AS rcount FROM gr_permissions rl';
+        if (!empty($do['search'])) {
+            $query = $query.' WHERE rl.name LIKE :search';
+        }
+        $query = $query.' ORDER BY name ASC LIMIT '.$lmt.' OFFSET '.$ofs;
+        $data = array();
+        if (!empty($do['search'])) {
+            $data['search'] = '%'.$do['search'].'%';
+        }
+        $lists = db('Grupo', 'q', $query, $data);
+        foreach ($lists as $f) {
+            $list[$i] = new stdClass();
+            $list[$i]->img = gr_img('roles', $f['id']);
+            $list[$i]->name = $f['name'];
+            $list[$i]->count = 0;
+            $list[$i]->sub = $f['rcount'].' '.$GLOBALS["lang"]->users;
+
+            $list[$i]->rtag = 'type="role" no="'.$f['id'].'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            if (isset($GLOBALS["roles"]['roles'][3])) {
+                $list[$i]->oa = $GLOBALS["lang"]->users;
+                $list[$i]->oat = 'class="mbopen loadside" xtra="'.$f['id'].'" data-block="rside" act="rusers" side="rside" zero="0" zval="'.$GLOBALS["lang"]->zero_users.'"';
+            }
+            if (isset($GLOBALS["roles"]['roles'][2])) {
+                $list[$i]->ob = $GLOBALS["lang"]->edit;
+                $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_role.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="role" data-name="'.$f['name'].'" data-no="'.$f['id'].'"';
+            }
+            if (isset($GLOBALS["roles"]['roles'][2])) {
+                $list[$i]->oc = $GLOBALS["lang"]->delete;
+                $list[$i]->oct = 'class="formpop" data-name="'.$f['name'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="role" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+            }
+            $list[$i]->icon = '';
+            $list[$i]->id = '';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "files") {
+        if (!isset($GLOBALS["roles"]['files']['5'])) {
+            exit;
+        }
+        if (isset($GLOBALS["roles"]['files'][1])) {
+            $list[0]->shw = 'shw';
+            $list[0]->icn = 'gi-upload';
+            $list[0]->mnu = 'udolist';
+            $list[0]->act = 'uploadfile';
+        }
+        if (!empty($do['search'])) {
+            $do['search'] = stripslashes(str_replace('/', '', $do['search']));
+            $dir = 'grupo/files/'.$uid.'/*'.$do['search'].'*';
+        } else {
+            $dir = 'grupo/files/'.$uid.'/';
+        }
+        $r = flr('list', $dir);
+        $r = array_slice($r, $ofs, $lmt);
+        foreach ($r as $f) {
+            $list[$i] = new stdClass();
+            $list[$i]->img = $GLOBALS["default"]->weburl."gem/ore/grupo/ext/default.png";
+            $im = "gem/ore/grupo/ext/".pathinfo($f, PATHINFO_EXTENSION).".png";
+            $n = basename($f);
+            if (file_exists($im)) {
+                $list[$i]->img = $GLOBALS["default"]->weburl.$im;
+            }
+            $list[$i]->name = explode('-gr-', $n, 2)[1];
+            $list[$i]->sub = flr('size', $dir.$n);
+            $list[$i]->count = '0';
+
+            $list[$i]->rtag = 'type="files" no="'.$n.'"';
+            $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+            if (isset($GLOBALS["roles"]['files'][4])) {
+                $list[$i]->oa = $GLOBALS["lang"]->share;
+                $list[$i]->oat = 'class="mbopen" data-block="panel" act="share"';
+            }
+            if (isset($GLOBALS["roles"]['files'][2])) {
+                $list[$i]->ob = $GLOBALS["lang"]->zip;
+                $list[$i]->obt = 'class="deval" act="zip"';
+            }
+            if (isset($GLOBALS["roles"]['files'][3])) {
+                $list[$i]->oc = $GLOBALS["lang"]->delete;
+                $list[$i]->oct = 'class="formpop" pn=2 title="'.$GLOBALS["lang"]->confirm.'" do="files"  btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+            }
+            $ext = mime_content_type($f);
+            if ($ext === 'image/jpeg' || $ext === 'image/png' || $ext === 'image/gif' || $ext === 'image/bmp' || $ext === 'image/x-ms-bmp') {
+                $list[$i]->od = $GLOBALS["lang"]->view;
+                $list[$i]->odt = 'class="grpreview paj" type="img" load="'.$GLOBALS["default"]->weburl.$f.'" mime="'.$ext.'"';
+            } else if ($ext === 'video/mp4' || $ext === 'video/mpeg' || $ext === 'video/ogg' || $ext === 'video/webm') {
+                $list[$i]->od = $GLOBALS["lang"]->view;
+                $list[$i]->odt = 'class="grpreview paj" type="video" load="'.$GLOBALS["default"]->weburl.$f.'" mime="'.$ext.'"';
+            }
+
+
+            $list[$i]->icon = "";
+            $list[$i]->id = 'class="file"';
+            $i = $i+1;
+        }
+    } else if ($do["type"] === "ufields") {
+        if (isset($GLOBALS["roles"]['fields'][4])) {
+            if (isset($GLOBALS["roles"]['fields'][1])) {
                 $list[0]->shw = 'shw';
                 $list[0]->icn = 'gi-plus';
                 $list[0]->mnu = 'udolist';
-                $list[0]->act = 'role';
+                $list[0]->act = 'customfield';
             }
-            $query = 'SELECT rl.id,rl.name,(SELECT count(1) FROM gr_users us WHERE us.role=rl.id)';
-            $query = $query.' AS rcount FROM gr_permissions rl';
+            $query = 'SELECT cf.id,cf.cat,cf.type,ph.full,ph.type AS phtype,cf.name,';
+            $query = $query.' ph.lid FROM gr_profiles cf ,gr_phrases ph WHERE cf.type="gfield"';
             if (!empty($do['search'])) {
-                $query = $query.' WHERE rl.name LIKE :search';
+                $query = $query.' AND ph.full LIKE :search';
             }
-            $query = $query.' ORDER BY name ASC LIMIT '.$lmt.' OFFSET '.$ofs;
+            $query = $query.' AND ph.type="phrase" AND ph.short=cf.name';
+            $query = $query.' AND ph.lid=:uslang OR cf.type="field"';
+            if (!empty($do['search'])) {
+                $query = $query.' AND ph.full LIKE :search';
+            }
+            $query = $query.' AND ph.type="phrase" AND ph.short=cf.name AND ph.lid=:uslang';
+            $query = $query.' ORDER BY cf.id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
             $data = array();
+            $data['uslang'] = $GLOBALS["lang"]->userlangid;
             if (!empty($do['search'])) {
                 $data['search'] = '%'.$do['search'].'%';
             }
             $lists = db('Grupo', 'q', $query, $data);
             foreach ($lists as $f) {
                 $list[$i] = new stdClass();
-                $list[$i]->img = gr_img('roles', $f['id']);
-                $list[$i]->name = $f['name'];
+                $list[$i]->img = gr_img('fields', $f['cat']);
+                $varky = $f['name'];
+                $list[$i]->name = $GLOBALS["lang"]->$varky;
                 $list[$i]->count = 0;
-                $list[$i]->sub = $f['rcount'].' '.$GLOBALS["lang"]->users;
+                $varky = $f['cat'];
+                if ($f['type'] == 'field') {
+                    $list[$i]->sub = $GLOBALS["lang"]->$varky.' - ('.$GLOBALS["lang"]->profile.')';
+                } else {
+                    $list[$i]->sub = $GLOBALS["lang"]->$varky.' - ('.$GLOBALS["lang"]->group.')';
+                }
 
                 $list[$i]->rtag = 'type="role" no="'.$f['id'].'"';
                 $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                if (isset($GLOBALS["roles"]['roles'][3])) {
-                    $list[$i]->oa = $GLOBALS["lang"]->users;
-                    $list[$i]->oat = 'class="mbopen loadside" xtra="'.$f['id'].'" data-block="rside" act="rusers" side="rside" zero="0" zval="'.$GLOBALS["lang"]->zero_users.'"';
-                }
-                if (isset($GLOBALS["roles"]['roles'][2])) {
+                if (isset($GLOBALS["roles"]['fields'][2])) {
                     $list[$i]->ob = $GLOBALS["lang"]->edit;
-                    $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_role.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="role" data-name="'.$f['name'].'" data-no="'.$f['id'].'"';
+                    $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_custom_field.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="customfield" data-name="'.$f['name'].'" data-no="'.$f['id'].'"';
                 }
-                if (isset($GLOBALS["roles"]['roles'][2])) {
+                if (isset($GLOBALS["roles"]['fields'][3])) {
                     $list[$i]->oc = $GLOBALS["lang"]->delete;
-                    $list[$i]->oct = 'class="formpop" data-name="'.$f['name'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="role" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+                    $list[$i]->oct = 'class="formpop" data-name="'.$f['name'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="customfield" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
                 }
                 $list[$i]->icon = '';
                 $list[$i]->id = '';
                 $i = $i+1;
             }
-        } else if ($do["type"] === "files") {
-            if (!isset($GLOBALS["roles"]['files']['5'])) {
-                exit;
-            }
-            if (isset($GLOBALS["roles"]['files'][1])) {
-                $list[0]->shw = 'shw';
-                $list[0]->icn = 'gi-upload';
-                $list[0]->mnu = 'udolist';
-                $list[0]->act = 'uploadfile';
-            }
+        }
+    } else if ($do["type"] === "cmenu") {
+        if (isset($GLOBALS["roles"]['sys'][6])) {
+            $list[0]->shw = 'shw';
+            $list[0]->icn = 'gi-plus';
+            $list[0]->mnu = 'udolist';
+            $list[0]->act = 'menuitem';
+            $query = 'SELECT cf.id,ph.type AS phtype,cf.v1,ph.lid FROM gr_options cf,';
+            $query = $query.'gr_phrases ph WHERE cf.type="menuitem"';
             if (!empty($do['search'])) {
-                $do['search'] = stripslashes(str_replace('/', '', $do['search']));
-                $dir = 'grupo/files/'.$uid.'/*'.$do['search'].'*';
-            } else {
-                $dir = 'grupo/files/'.$uid.'/';
+                $query = $query.' AND ph.full LIKE :search';
             }
-            $r = flr('list', $dir);
-            $r = array_slice($r, $ofs, $lmt);
-            foreach ($r as $f) {
+            $query = $query.' AND ph.type="phrase" AND ph.short=cf.v1 AND ph.lid=:uslang';
+            $query = $query.' ORDER BY v3 ASC LIMIT '.$lmt.' OFFSET '.$ofs;
+            $data = array();
+            $data['uslang'] = $GLOBALS["lang"]->userlangid;
+            if (!empty($do['search'])) {
+                $data['search'] = '%'.$do['search'].'%';
+            }
+            $lists = db('Grupo', 'q', $query, $data);
+            foreach ($lists as $f) {
+                $list[$i] = new stdClass();
+                $list[$i]->img = gr_img('groups', 0);
+                $varky = $f['v1'];
+                $list[$i]->name = $GLOBALS["lang"]->$varky;
+                $list[$i]->count = 0;
+                $list[$i]->sub = $GLOBALS["lang"]->menu_item;
+                $list[$i]->rtag = 'type="cmenu" no="'.$f['id'].'"';
+                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+                $list[$i]->ob = $GLOBALS["lang"]->edit;
+                $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_menu_item.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="menuitem" data-name="'.$list[$i]->name.'" data-no="'.$f['id'].'"';
+                $list[$i]->oc = $GLOBALS["lang"]->delete;
+                $list[$i]->oct = 'class="formpop" data-name="'.$f['v1'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="menuitem" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+                $list[$i]->icon = '';
+                $list[$i]->id = '';
+                $i = $i+1;
+            }
+        }
+    } else if ($do["type"] === "radiostations") {
+        if (isset($GLOBALS["roles"]['features'][14])) {
+            $list[0]->shw = 'shw';
+            $list[0]->icn = 'gi-plus';
+            $list[0]->mnu = 'udolist';
+            $list[0]->act = 'radiostation';
+            $query = 'SELECT id,v1,v3 FROM gr_options';
+            $query = $query.' WHERE type="radiostation"';
+            if (!empty($do['search'])) {
+                $query = $query.' AND v1 LIKE :search';
+            }
+            $query = $query.' ORDER BY v1 ASC LIMIT '.$lmt.' OFFSET '.$ofs;
+            $data = array();
+            if (!empty($do['search'])) {
+                $data['search'] = '%'.$do['search'].'%';
+            }
+            $lists = db('Grupo', 'q', $query, $data);
+            foreach ($lists as $f) {
+                $list[$i] = new stdClass();
+                $list[$i]->img = gr_img('radiostations', $f['id']);
+                $list[$i]->name = $f['v1'];
+                $list[$i]->count = 0;
+                $list[$i]->sub = $GLOBALS["lang"]->radiostations;
+                $list[$i]->rtag = 'type="radiostation" no="'.$f['id'].'"';
+                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+                $list[$i]->ob = $GLOBALS["lang"]->edit;
+                $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_radiostation.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="radiostation" data-no="'.$f['id'].'"';
+                $list[$i]->oc = $GLOBALS["lang"]->delete;
+                $list[$i]->oct = 'class="formpop" data-name="'.$f['v1'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="radiostation" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+                $list[$i]->icon = '';
+                $list[$i]->id = '';
+                $i = $i+1;
+            }
+        }
+    } else if ($do["type"] === "loginproviders") {
+        if (isset($GLOBALS["roles"]['sys'][8])) {
+            $list[0]->shw = 'shw';
+            $list[0]->icn = 'gi-plus';
+            $list[0]->mnu = 'udolist';
+            $list[0]->act = 'loginprovider';
+            $query = 'SELECT id,v1,v3 FROM gr_options';
+            $query = $query.' WHERE type="loginprovider"';
+            if (!empty($do['search'])) {
+                $query = $query.' AND v1 LIKE :search';
+            }
+            $query = $query.' ORDER BY v1 ASC LIMIT '.$lmt.' OFFSET '.$ofs;
+            $data = array();
+            if (!empty($do['search'])) {
+                $data['search'] = '%'.$do['search'].'%';
+            }
+            $lists = db('Grupo', 'q', $query, $data);
+            foreach ($lists as $f) {
+                $list[$i] = new stdClass();
+                $list[$i]->img = gr_img('loginprovider', $f['id']);
+                $list[$i]->name = stripslashes($f['v1']);
+                $list[$i]->count = 0;
+                $list[$i]->sub = $GLOBALS["lang"]->identity_provider;
+                $list[$i]->rtag = 'type="loginprovider" no="'.$f['id'].'"';
+                $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
+                $list[$i]->ob = $GLOBALS["lang"]->edit;
+                $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_provider.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="loginprovider" data-no="'.$f['id'].'"';
+                $list[$i]->oc = $GLOBALS["lang"]->delete;
+                $list[$i]->oct = 'class="formpop" data-name="'.$list[$i]->name.'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="loginprovider" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
+                $list[$i]->icon = '';
+                $list[$i]->id = '';
+                $i = $i+1;
+            }
+        }
+    } else if ($do["type"] === "groupfiles") {
+        $query = 'SELECT id,msg,xtra ';
+        $query = $query.'FROM gr_msgs WHERE gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid';
+        $query = $query.' ORDER BY id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
+        $data = array();
+        $data['gid'] = $do["gid"];
+        $lists = db('Grupo', 'q', $query, $data);
+        foreach ($lists as $f) {
+            $orgfile = "gem/ore/grupo/files/dumb/".$f['msg'];
+            $prevfile = "gem/ore/grupo/files/preview/".$f['msg'];
+            $orgfileshrt = "grupo/files/dumb/".$f['msg'];
+            if (file_exists($orgfile)) {
                 $list[$i] = new stdClass();
                 $list[$i]->img = $GLOBALS["default"]->weburl."gem/ore/grupo/ext/default.png";
-                $im = "gem/ore/grupo/ext/".pathinfo($f, PATHINFO_EXTENSION).".png";
-                $n = basename($f);
+                $im = "gem/ore/grupo/ext/".pathinfo($orgfile, PATHINFO_EXTENSION).".png";
                 if (file_exists($im)) {
                     $list[$i]->img = $GLOBALS["default"]->weburl.$im;
                 }
-                $list[$i]->name = explode('-gr-', $n, 2)[1];
-                $list[$i]->sub = flr('size', $dir.$n);
-                $list[$i]->count = '0';
-
-                $list[$i]->rtag = 'type="files" no="'.$n.'"';
+                $list[$i]->name = stripslashes($f['xtra']);
+                $list[$i]->count = 0;
+                $list[$i]->sub = flr('size', $orgfileshrt);
+                $list[$i]->rtag = 'type="files" no="'.$f['id'].'"';
                 $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                if (isset($GLOBALS["roles"]['files'][4])) {
-                    $list[$i]->oa = $GLOBALS["lang"]->share;
-                    $list[$i]->oat = 'class="mbopen" data-block="panel" act="share"';
-                }
                 if (isset($GLOBALS["roles"]['files'][2])) {
-                    $list[$i]->ob = $GLOBALS["lang"]->zip;
-                    $list[$i]->obt = 'class="deval" act="zip"';
+                    $list[$i]->oa = $GLOBALS["lang"]->zip;
+                    $list[$i]->oat = 'class="formpop" data-file="'.$f['xtra'].'" title="'.$GLOBALS["lang"]->download_file.'" data-adt="0" xtid="'.$f['msg'].'" pn="1" do="files" btn="'.$GLOBALS["lang"]->download.'" act="download"';
                 }
-                if (isset($GLOBALS["roles"]['files'][3])) {
-                    $list[$i]->oc = $GLOBALS["lang"]->delete;
-                    $list[$i]->oct = 'class="formpop" pn=2 title="'.$GLOBALS["lang"]->confirm.'" do="files"  btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                }
-                $ext = mime_content_type($f);
+                $ext = mime_content_type($orgfile);
                 if ($ext === 'image/jpeg' || $ext === 'image/png' || $ext === 'image/gif' || $ext === 'image/bmp' || $ext === 'image/x-ms-bmp') {
                     $list[$i]->od = $GLOBALS["lang"]->view;
-                    $list[$i]->odt = 'class="grpreview paj" type="img" load="'.$GLOBALS["default"]->weburl.$f.'" mime="'.$ext.'"';
+                    $list[$i]->odt = 'class="grpreview paj" type="img" load="'.$GLOBALS["default"]->weburl.$prevfile.'" mime="'.$ext.'"';
                 } else if ($ext === 'video/mp4' || $ext === 'video/mpeg' || $ext === 'video/ogg' || $ext === 'video/webm') {
                     $list[$i]->od = $GLOBALS["lang"]->view;
-                    $list[$i]->odt = 'class="grpreview paj" type="video" load="'.$GLOBALS["default"]->weburl.$f.'" mime="'.$ext.'"';
+                    $list[$i]->odt = 'class="grpreview paj" type="video" load="'.$GLOBALS["default"]->weburl.$prevfile.'" mime="'.$ext.'"';
                 }
-
-
-                $list[$i]->icon = "";
-                $list[$i]->id = 'class="file"';
+                $list[$i]->icon = '';
+                $list[$i]->id = '';
                 $i = $i+1;
             }
-        } else if ($do["type"] === "ufields") {
-            if (isset($GLOBALS["roles"]['fields'][4])) {
-                if (isset($GLOBALS["roles"]['fields'][1])) {
-                    $list[0]->shw = 'shw';
-                    $list[0]->icn = 'gi-plus';
-                    $list[0]->mnu = 'udolist';
-                    $list[0]->act = 'customfield';
-                }
-                $query = 'SELECT cf.id,cf.cat,cf.type,ph.full,ph.type AS phtype,cf.name,';
-                $query = $query.' ph.lid FROM gr_profiles cf ,gr_phrases ph WHERE cf.type="gfield"';
-                if (!empty($do['search'])) {
-                    $query = $query.' AND ph.full LIKE :search';
-                }
-                $query = $query.' AND ph.type="phrase" AND ph.short=cf.name';
-                $query = $query.' AND ph.lid=:uslang OR cf.type="field"';
-                if (!empty($do['search'])) {
-                    $query = $query.' AND ph.full LIKE :search';
-                }
-                $query = $query.' AND ph.type="phrase" AND ph.short=cf.name AND ph.lid=:uslang';
-                $query = $query.' ORDER BY cf.id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
-                $data = array();
-                $data['uslang'] = $GLOBALS["lang"]->userlangid;
-                if (!empty($do['search'])) {
-                    $data['search'] = '%'.$do['search'].'%';
-                }
-                $lists = db('Grupo', 'q', $query, $data);
-                foreach ($lists as $f) {
-                    $list[$i] = new stdClass();
-                    $list[$i]->img = gr_img('fields', $f['cat']);
-                    $varky = $f['name'];
-                    $list[$i]->name = $GLOBALS["lang"]->$varky;
-                    $list[$i]->count = 0;
-                    $varky = $f['cat'];
-                    if ($f['type'] == 'field') {
-                        $list[$i]->sub = $GLOBALS["lang"]->$varky.' - ('.$GLOBALS["lang"]->profile.')';
-                    } else {
-                        $list[$i]->sub = $GLOBALS["lang"]->$varky.' - ('.$GLOBALS["lang"]->group.')';
-                    }
-
-                    $list[$i]->rtag = 'type="role" no="'.$f['id'].'"';
-                    $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                    if (isset($GLOBALS["roles"]['fields'][2])) {
-                        $list[$i]->ob = $GLOBALS["lang"]->edit;
-                        $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_custom_field.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="customfield" data-name="'.$f['name'].'" data-no="'.$f['id'].'"';
-                    }
-                    if (isset($GLOBALS["roles"]['fields'][3])) {
-                        $list[$i]->oc = $GLOBALS["lang"]->delete;
-                        $list[$i]->oct = 'class="formpop" data-name="'.$f['name'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="customfield" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                    }
-                    $list[$i]->icon = '';
-                    $list[$i]->id = '';
-                    $i = $i+1;
-                }
-            }
-        } else if ($do["type"] === "cmenu") {
-            if (isset($GLOBALS["roles"]['sys'][6])) {
-                $list[0]->shw = 'shw';
-                $list[0]->icn = 'gi-plus';
-                $list[0]->mnu = 'udolist';
-                $list[0]->act = 'menuitem';
-                $query = 'SELECT cf.id,ph.type AS phtype,cf.v1,ph.lid FROM gr_options cf,';
-                $query = $query.'gr_phrases ph WHERE cf.type="menuitem"';
-                if (!empty($do['search'])) {
-                    $query = $query.' AND ph.full LIKE :search';
-                }
-                $query = $query.' AND ph.type="phrase" AND ph.short=cf.v1 AND ph.lid=:uslang';
-                $query = $query.' ORDER BY v3 ASC LIMIT '.$lmt.' OFFSET '.$ofs;
-                $data = array();
-                $data['uslang'] = $GLOBALS["lang"]->userlangid;
-                if (!empty($do['search'])) {
-                    $data['search'] = '%'.$do['search'].'%';
-                }
-                $lists = db('Grupo', 'q', $query, $data);
-                foreach ($lists as $f) {
-                    $list[$i] = new stdClass();
-                    $list[$i]->img = gr_img('groups', 0);
-                    $varky = $f['v1'];
-                    $list[$i]->name = $GLOBALS["lang"]->$varky;
-                    $list[$i]->count = 0;
-                    $list[$i]->sub = $GLOBALS["lang"]->menu_item;
-                    $list[$i]->rtag = 'type="cmenu" no="'.$f['id'].'"';
-                    $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                    $list[$i]->ob = $GLOBALS["lang"]->edit;
-                    $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_menu_item.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="menuitem" data-name="'.$list[$i]->name.'" data-no="'.$f['id'].'"';
-                    $list[$i]->oc = $GLOBALS["lang"]->delete;
-                    $list[$i]->oct = 'class="formpop" data-name="'.$f['v1'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="menuitem" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                    $list[$i]->icon = '';
-                    $list[$i]->id = '';
-                    $i = $i+1;
-                }
-            }
-        } else if ($do["type"] === "radiostations") {
-            if (isset($GLOBALS["roles"]['features'][14])) {
-                $list[0]->shw = 'shw';
-                $list[0]->icn = 'gi-plus';
-                $list[0]->mnu = 'udolist';
-                $list[0]->act = 'radiostation';
-                $query = 'SELECT id,v1,v3 FROM gr_options';
-                $query = $query.' WHERE type="radiostation"';
-                if (!empty($do['search'])) {
-                    $query = $query.' AND v1 LIKE :search';
-                }
-                $query = $query.' ORDER BY v1 ASC LIMIT '.$lmt.' OFFSET '.$ofs;
-                $data = array();
-                if (!empty($do['search'])) {
-                    $data['search'] = '%'.$do['search'].'%';
-                }
-                $lists = db('Grupo', 'q', $query, $data);
-                foreach ($lists as $f) {
-                    $list[$i] = new stdClass();
-                    $list[$i]->img = gr_img('radiostations', $f['id']);
-                    $list[$i]->name = $f['v1'];
-                    $list[$i]->count = 0;
-                    $list[$i]->sub = $GLOBALS["lang"]->radiostations;
-                    $list[$i]->rtag = 'type="radiostation" no="'.$f['id'].'"';
-                    $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                    $list[$i]->ob = $GLOBALS["lang"]->edit;
-                    $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_radiostation.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="radiostation" data-no="'.$f['id'].'"';
-                    $list[$i]->oc = $GLOBALS["lang"]->delete;
-                    $list[$i]->oct = 'class="formpop" data-name="'.$f['v1'].'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="radiostation" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                    $list[$i]->icon = '';
-                    $list[$i]->id = '';
-                    $i = $i+1;
-                }
-            }
-        } else if ($do["type"] === "loginproviders") {
-            if (isset($GLOBALS["roles"]['sys'][8])) {
-                $list[0]->shw = 'shw';
-                $list[0]->icn = 'gi-plus';
-                $list[0]->mnu = 'udolist';
-                $list[0]->act = 'loginprovider';
-                $query = 'SELECT id,v1,v3 FROM gr_options';
-                $query = $query.' WHERE type="loginprovider"';
-                if (!empty($do['search'])) {
-                    $query = $query.' AND v1 LIKE :search';
-                }
-                $query = $query.' ORDER BY v1 ASC LIMIT '.$lmt.' OFFSET '.$ofs;
-                $data = array();
-                if (!empty($do['search'])) {
-                    $data['search'] = '%'.$do['search'].'%';
-                }
-                $lists = db('Grupo', 'q', $query, $data);
-                foreach ($lists as $f) {
-                    $list[$i] = new stdClass();
-                    $list[$i]->img = gr_img('loginprovider', $f['id']);
-                    $list[$i]->name = stripslashes($f['v1']);
-                    $list[$i]->count = 0;
-                    $list[$i]->sub = $GLOBALS["lang"]->identity_provider;
-                    $list[$i]->rtag = 'type="loginprovider" no="'.$f['id'].'"';
-                    $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                    $list[$i]->ob = $GLOBALS["lang"]->edit;
-                    $list[$i]->obt = 'class="formpop" title="'.$GLOBALS["lang"]->edit_provider.'" do="edit" btn="'.$GLOBALS["lang"]->update.'" act="loginprovider" data-no="'.$f['id'].'"';
-                    $list[$i]->oc = $GLOBALS["lang"]->delete;
-                    $list[$i]->oct = 'class="formpop" data-name="'.$list[$i]->name.'" data-no="'.$f['id'].'" title="'.$GLOBALS["lang"]->confirm.'" do="loginprovider" btn="'.$GLOBALS["lang"]->delete.'" act="delete"';
-                    $list[$i]->icon = '';
-                    $list[$i]->id = '';
-                    $i = $i+1;
-                }
-            }
-        } else if ($do["type"] === "groupfiles") {
-            $query = 'SELECT id,msg,xtra ';
-            $query = $query.'FROM gr_msgs WHERE gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid';
-            $query = $query.' ORDER BY id DESC LIMIT '.$lmt.' OFFSET '.$ofs;
+        }
+    } else if ($do["type"] === "getinfo") {
+        $i = 0;
+        unset($list[0]);
+        $list[$i] = new stdClass();
+        $list[$i]->id = vc($do['id'], 'num');
+        $list[$i]->edit = $list[$i]->icon = 0;
+        $list[$i]->sharedmedia = 0;
+        $list[$i]->btn = $GLOBALS["lang"]->message;
+        $list[$i]->tbclass = 'loadgroup';
+        $list[$i]->tbattr = 'no="'.$do['id'].'" ldt="user"';
+        $list[$i]->msgoffmsg = $list[$i]->msgoff = 0;
+        if (isset($do['ldt']) && $do['ldt'] == 'group') {
+            $query = 'SELECT gr.v1,gr.v2,gr.v3,gr.v4,gr.v5,gr.v6,gr.tms,';
+            $query = $query.'(SELECT count(1) FROM gr_msgs lk WHERE lk.type="like" AND lk.gid=:gid) AS likes,';
+            $query = $query.'(SELECT GROUP_CONCAT(CONCAT(gr_msgs.msg) ORDER BY gr_msgs.id DESC SEPARATOR ";") AS sharedmedia ';
+            $query = $query.'FROM gr_msgs WHERE gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.jpg" ';
+            $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.jpeg" ';
+            $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.png" ';
+            $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.gif" ';
+            $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.bmp" ';
+            $query = $query.' LIMIT 9) AS sharedmedia,';
+            $query = $query.'(SELECT v3 FROM gr_options WHERE type="gruser" AND v1=:gid AND v2=:uid LIMIT 1) AS grrole,';
+            $query = $query.'(SELECT v2 FROM gr_options WHERE type="groupslug" AND v1=:gid LIMIT 1) AS groupslug,';
+            $query = $query.'(SELECT IFNULL((SELECT CASE WHEN tz.v2="Auto" THEN ';
+            $query = $query.'(SELECT am.v2 FROM gr_options am WHERE am.type="profile" AND am.v1="autotmz" AND am.v3=tz.v3)';
+            $query = $query.' ELSE tz.v2 END AS timz FROM gr_options tz WHERE tz.type="profile" AND tz.v1="tmz" AND tz.v3=:uid),';
+            $query = $query.':tmz)) AS timezone,';
+            $query = $query.'(SELECT count(1) FROM gr_options mc WHERE mc.type="gruser" AND mc.v1=:gid) AS mcount';
+            $query = $query.' FROM gr_options gr WHERE gr.type="group" AND gr.id=:gid';
+            $query = $query.' LIMIT 1';
             $data = array();
-            $data['gid'] = $do["gid"];
-            $lists = db('Grupo', 'q', $query, $data);
-            foreach ($lists as $f) {
-                $orgfile = "gem/ore/grupo/files/dumb/".$f['msg'];
-                $prevfile = "gem/ore/grupo/files/preview/".$f['msg'];
-                $orgfileshrt = "grupo/files/dumb/".$f['msg'];
-                if (file_exists($orgfile)) {
-                    $list[$i] = new stdClass();
-                    $list[$i]->img = $GLOBALS["default"]->weburl."gem/ore/grupo/ext/default.png";
-                    $im = "gem/ore/grupo/ext/".pathinfo($orgfile, PATHINFO_EXTENSION).".png";
-                    if (file_exists($im)) {
-                        $list[$i]->img = $GLOBALS["default"]->weburl.$im;
-                    }
-                    $list[$i]->name = stripslashes($f['xtra']);
-                    $list[$i]->count = 0;
-                    $list[$i]->sub = flr('size', $orgfileshrt);
-                    $list[$i]->rtag = 'type="files" no="'.$f['id'].'"';
-                    $list[$i]->oa = $list[$i]->ob = $list[$i]->oc = 0;
-                    if (isset($GLOBALS["roles"]['files'][2])) {
-                        $list[$i]->oa = $GLOBALS["lang"]->zip;
-                        $list[$i]->oat = 'class="formpop" data-file="'.$f['xtra'].'" title="'.$GLOBALS["lang"]->download_file.'" data-adt="0" xtid="'.$f['msg'].'" pn="1" do="files" btn="'.$GLOBALS["lang"]->download.'" act="download"';
-                    }
-                    $ext = mime_content_type($orgfile);
-                    if ($ext === 'image/jpeg' || $ext === 'image/png' || $ext === 'image/gif' || $ext === 'image/bmp' || $ext === 'image/x-ms-bmp') {
-                        $list[$i]->od = $GLOBALS["lang"]->view;
-                        $list[$i]->odt = 'class="grpreview paj" type="img" load="'.$GLOBALS["default"]->weburl.$prevfile.'" mime="'.$ext.'"';
-                    } else if ($ext === 'video/mp4' || $ext === 'video/mpeg' || $ext === 'video/ogg' || $ext === 'video/webm') {
-                        $list[$i]->od = $GLOBALS["lang"]->view;
-                        $list[$i]->odt = 'class="grpreview paj" type="video" load="'.$GLOBALS["default"]->weburl.$prevfile.'" mime="'.$ext.'"';
-                    }
-                    $list[$i]->icon = '';
-                    $list[$i]->id = '';
-                    $i = $i+1;
-                }
-            }
-        } else if ($do["type"] === "getinfo") {
-            $i = 0;
-            unset($list[0]);
-            $list[$i] = new stdClass();
-            $list[$i]->id = vc($do['id'], 'num');
-            $list[$i]->edit = $list[$i]->icon = 0;
-            $list[$i]->sharedmedia = 0;
-            $list[$i]->btn = $GLOBALS["lang"]->message;
-            $list[$i]->tbclass = 'loadgroup';
-            $list[$i]->tbattr = 'no="'.$do['id'].'" ldt="user"';
-            $list[$i]->msgoffmsg = $list[$i]->msgoff = 0;
-            if (isset($do['ldt']) && $do['ldt'] == 'group') {
-                $query = 'SELECT gr.v1,gr.v2,gr.v3,gr.v4,gr.v5,gr.v6,gr.tms,';
-                $query = $query.'(SELECT count(1) FROM gr_msgs lk WHERE lk.type="like" AND lk.gid=:gid) AS likes,';
-                $query = $query.'(SELECT GROUP_CONCAT(CONCAT(gr_msgs.msg) ORDER BY gr_msgs.id DESC SEPARATOR ";") AS sharedmedia ';
-                $query = $query.'FROM gr_msgs WHERE gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.jpg" ';
-                $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.jpeg" ';
-                $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.png" ';
-                $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.gif" ';
-                $query = $query.'OR gr_msgs.cat="group" AND gr_msgs.type="file" AND gr_msgs.gid=:gid AND gr_msgs.xtra LIKE "%.bmp" ';
-                $query = $query.' LIMIT 9) AS sharedmedia,';
-                $query = $query.'(SELECT v3 FROM gr_options WHERE type="gruser" AND v1=:gid AND v2=:uid LIMIT 1) AS grrole,';
-                $query = $query.'(SELECT v2 FROM gr_options WHERE type="groupslug" AND v1=:gid LIMIT 1) AS groupslug,';
-                $query = $query.'(SELECT IFNULL((SELECT CASE WHEN tz.v2="Auto" THEN ';
-                $query = $query.'(SELECT am.v2 FROM gr_options am WHERE am.type="profile" AND am.v1="autotmz" AND am.v3=tz.v3)';
-                $query = $query.' ELSE tz.v2 END AS timz FROM gr_options tz WHERE tz.type="profile" AND tz.v1="tmz" AND tz.v3=:uid),';
-                $query = $query.':tmz)) AS timezone,';
-                $query = $query.'(SELECT count(1) FROM gr_options mc WHERE mc.type="gruser" AND mc.v1=:gid) AS mcount';
-                $query = $query.' FROM gr_options gr WHERE gr.type="group" AND gr.id=:gid';
-                $query = $query.' LIMIT 1';
-                $data = array();
-                $data['gid'] = $do["id"];
-                $data['uid'] = $uid;
-                $data['tmz'] = $GLOBALS["default"]->timezone;
-                $r = db('Grupo', 'q', $query, $data);
-                if (isset($r[0])) {
-                    $list[$i]->img = gr_img('groups', $do['id']);
-                    $list[$i]->msgoff = 2;
-                    $list[$i]->uname = $GLOBALS["lang"]->public_group;
-                    $list[$i]->shares = gr_shnum($r[0]['mcount']);
-                    $list[$i]->loves = gr_shnum($r[0]['likes']);
-                    $list[$i]->mna = html_entity_decode($GLOBALS["lang"]->hearts);
-                    $list[$i]->mnb = html_entity_decode($GLOBALS["lang"]->members);
-                    $list[$i]->mnc = html_entity_decode($GLOBALS["lang"]->created_on);
-                    $list[$i]->cp = gr_img('coverpic/groups', $do['id']);
-                    $list[$i]->tbclass = 'formpop';
-                    if ($r[0]['grrole'] == 2 || isset($GLOBALS["roles"]['groups']['7'])) {
-                        $list[$i]->icon = 1;
-                        $list[$i]->iconattr = array();
-                        $list[$i]->iconattr['pn'] = 4;
-                        $list[$i]->iconattr['no'] = $do['id'];
-                        $list[$i]->iconattr['do'] = 'edit';
-                        $list[$i]->iconattr['act'] = 'group';
-                        $list[$i]->icontitle = $GLOBALS["lang"]->edit_group;
-                        $list[$i]->iconattr['title'] = $GLOBALS["lang"]->edit_group;
-                        $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->edit_group;
-                        $list[$i]->iconclass = 'gi-pencil-1 formpop';
-                    } else {
-                        $list[$i]->icon = 1;
-                        $list[$i]->iconattr = array();
-                        $list[$i]->iconattr['pn'] = 4;
-                        $list[$i]->iconattr['no'] = $do['id'];
-                        $list[$i]->iconattr['do'] = 'group';
-                        $list[$i]->iconattr['act'] = 'reportmsg';
-                        $list[$i]->icontitle = $GLOBALS["lang"]->report_group;
-                        $list[$i]->iconattr['title'] = $GLOBALS["lang"]->report_group;
-                        $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->report_group;
-                        $list[$i]->iconclass = 'gi-flag-1 formpop';
-                    }
-                    if ($r[0]['v6'] != 'unleavable') {
-                        $list[$i]->btn = $GLOBALS["lang"]->leave_group;
-                        $list[$i]->tbattr = 'pn="1" title="'.$GLOBALS["lang"]->leave_group.'" do="group" btn="'.$GLOBALS["lang"]->leave_group.'" act="leave"';
-                    } else {
-                        $list[$i]->btn = $GLOBALS["lang"]->report_group;
-                        $list[$i]->tbattr = 'class="formpop" pn="1" title="'.$GLOBALS["lang"]->report_group.'" do="group" btn="'.$GLOBALS["lang"]->report.'" act="reportmsg"';
-                    }
-                    if (isset($r[0])) {
-                        $list[$i]->name = html_entity_decode($r[0]['v1']);
-                        if (!empty($r[0]['v2'])) {
-                            $list[$i]->uname = $GLOBALS["lang"]->protected_group;
-                        }
-                        if ($r[0]['v3'] == 'secret') {
-                            $list[$i]->uname = $GLOBALS["lang"]->secret_group;
-                        }
-                        if (gr_role('access', 'features', '5')) {
-                            if (!empty($r[0]['sharedmedia'])) {
-                                $sharedmedia = explode(';', $r[0]['sharedmedia']);
-                                $list[$i]->sharedmediatitle = $GLOBALS["lang"]->recent_images;
-                                foreach ($sharedmedia as $key => $media) {
-                                    $fullimg = $GLOBALS["default"]->weburl.'gem/ore/grupo/files/dumb/'.$media;
-                                    $media = 'gem/ore/grupo/files/preview/'.$media;
-                                    if (!file_exists($media)) {
-                                        unset($sharedmedia[$key]);
-                                    } else {
-                                        $sharedmedia[$key] = $GLOBALS["default"]->weburl.$media.'||'.$fullimg;
-                                    }
-                                }
-                                $list[$i]->sharedmedia = implode(';', $sharedmedia);
-                            }
-                        }
-                    } else {
-                        $list[$i]->name = $GLOBALS["lang"]->unknown;
-                    }
-                    $tms = new DateTime($r[0]['tms']);
-                }
-            } else {
-                $query = 'SELECT us.name AS uname,us.altered,us.role,';
-                $query = $query.'(SELECT count(1) FROM gr_msgs lk WHERE lk.type="like" AND lk.xtra=:uid) AS likes,';
-                $query = $query.'(SELECT name FROM gr_permissions rn WHERE rn.id=us.role) AS rolename,';
-                $query = $query.'(SELECT count(id) FROM gr_options WHERE type="pblock" AND v1=:usid AND v2=:uid) AS blocked,';
-                $query = $query.'(SELECT count(1) FROM gr_msgs sc WHERE sc.type="file" AND sc.uid=:uid) AS scount,';
-                $query = $query.'(SELECT IFNULL((SELECT CASE WHEN tz.v2="Auto" THEN ';
-                $query = $query.'(SELECT am.v2 FROM gr_options am WHERE am.type="profile" AND am.v1="autotmz" AND am.v3=tz.v3)';
-                $query = $query.' ELSE tz.v2 END AS timz FROM gr_options tz WHERE tz.type="profile" AND tz.v1="tmz" AND tz.v3=:usid),';
-                $query = $query.':tmz)) AS timezone,';
-                $query = $query.'(SELECT tms FROM gr_utrack WHERE uid=:uid ORDER BY tms DESC LIMIT 1) AS lastlg,';
-                $query = $query.'(SELECT v2 FROM gr_options WHERE v3=:uid AND type="profile" AND v1="name") AS name';
-                $query = $query.' FROM gr_users us WHERE us.id=:uid LIMIT 1';
-                $data = array();
-                $data['uid'] = $do["id"];
-                $data['usid'] = $uid;
-                $data['tmz'] = $GLOBALS["default"]->timezone;
-                $r = db('Grupo', 'q', $query, $data);
-                if (isset($r[0])) {
-                    $list[$i]->shares = gr_shnum($r[0]['scount']);
-                    $list[$i]->loves = gr_shnum($r[0]['likes']);
-                    $list[$i]->mna = html_entity_decode($GLOBALS["lang"]->hearts);
-                    $list[$i]->mnb = html_entity_decode($GLOBALS["lang"]->shares);
-                    $list[$i]->mnc = html_entity_decode($GLOBALS["lang"]->last_login);
-                    $list[$i]->rolename = $r[0]['rolename'];
-                    $list[$i]->roleimg = gr_img('roles', $r[0]['role']);
-                    $list[$i]->img = gr_img('users', $do['id']);
-                    $list[$i]->cp = gr_img('coverpic/users', $do['id']);
-                    if (isset($GLOBALS["roles"]['users'][2]) && $do['id'] != $uid && $r[0]['uname'] != $unq) {
-                        if (isset($r[0]['uname'])) {
-                            $list[$i]->icon = 1;
-                            $list[$i]->iconattr = array();
-                            $list[$i]->iconattr['data-no'] = $list[$i]->iconattr['xtid'] = $do['id'];
-                            $list[$i]->iconattr['do'] = 'edit';
-                            $list[$i]->iconattr['act'] = 'profile';
-                            $list[$i]->icontitle = $GLOBALS["lang"]->edit_profile;
-                            $list[$i]->iconattr['title'] = $GLOBALS["lang"]->edit_profile;
-                            $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->edit_profile;
-                            $list[$i]->iconclass = 'gi-pencil-1 formpop';
-                        }
-                    } else if ($do['id'] != $uid) {
-                        $list[$i]->icon = 1;
-                        $list[$i]->iconattr = array();
-                        $list[$i]->iconattr['pn'] = 4;
-                        $list[$i]->iconattr['no'] = $do['id'];
-                        $list[$i]->iconattr['do'] = 'profile';
-                        $list[$i]->iconattr['act'] = 'block';
-                        if ($r[0]['blocked'] > 0) {
-                            $list[$i]->icontitle = $GLOBALS["lang"]->unblock_user;
-                            $list[$i]->iconattr['title'] = $GLOBALS["lang"]->unblock_user;
-                            $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->unblock_user;
-                            $list[$i]->iconclass = 'gi-lock-open-1 formpop';
-                        } else {
-                            $list[$i]->icontitle = $GLOBALS["lang"]->block_user;
-                            $list[$i]->iconattr['title'] = $GLOBALS["lang"]->block_user;
-                            $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->block_user;
-                            $list[$i]->iconclass = 'gi-lock-1 formpop';
-                        }
-                    }
-                    if (!isset($GLOBALS["roles"]['privatemsg'][1]) || !isset($r[0]['uname'])) {
-                        $list[$i]->msgoff = 2;
-                        $list[$i]->msgoffmsg = $GLOBALS["lang"]->denied;
-                        if (!isset($r[0]['uname'])) {
-                            $list[$i]->msgoffmsg = $GLOBALS["lang"]->profile_noexists;
-                        }
-                        $list[$i]->tbclass = 'say';
-                        $list[$i]->btn = $GLOBALS["lang"]->message;
-                        $list[$i]->tbattr = 'type="e" say="'.$list[$i]->msgoffmsg.'"';
-
-                    }
-                    if ($do['id'] == $uid) {
-                        $list[$i]->msgoff = 2;
-                        $list[$i]->tbclass = 'editprf';
-                        $list[$i]->tbattr = 'type="editprofile"';
-                        $list[$i]->btn = $GLOBALS["lang"]->edit_profile;
-                    }
-                    if (isset($GLOBALS["roles"]['users'][10])) {
-                        $list[$i]->name = $r[0]['name'];
-                    } else {
-                        $list[$i]->name = $r[0]['uname'];
-                    }
-                    if (isset($r[0]['uname']) && !empty($r[0]['uname'])) {
-                        $usrname = $r[0]['uname'];
-                        $list[$i]->uname = '@'.$r[0]['uname'];
-                    } else {
-                        $usrname = 0;
-                        $list[$i]->uname = $GLOBALS["lang"]->unknown;
-                    }
-                    if (!empty($r[0]['lastlg'])) {
-                        $tms = new DateTime($r[0]['lastlg']);
-                    } else if (isset($r[0]['uname'])) {
-                        $tms = new DateTime($r[0]['altered']);
-                    } else {
-                        $tms = new DateTime();
-                    }
-                }
-            }
+            $data['gid'] = $do["id"];
+            $data['uid'] = $uid;
+            $data['tmz'] = $GLOBALS["default"]->timezone;
+            $r = db('Grupo', 'q', $query, $data);
             if (isset($r[0])) {
-                $tmz = new DateTimeZone($r[0]['timezone']);
-                $tms->setTimezone($tmz);
-                $tmst = strtotime($tms->format('Y-m-d H:i:s'));
-                if ($GLOBALS["default"]->dateformat == 'mdy') {
-                    $dformat = 'M-d-y';
-                } else if ($GLOBALS["default"]->dateformat == 'ymd') {
-                    $dformat = 'y-M-d';
+                $list[$i]->img = gr_img('groups', $do['id']);
+                $list[$i]->msgoff = 2;
+                $list[$i]->uname = $GLOBALS["lang"]->public_group;
+                $list[$i]->shares = gr_shnum($r[0]['mcount']);
+                $list[$i]->loves = gr_shnum($r[0]['likes']);
+                $list[$i]->mna = html_entity_decode($GLOBALS["lang"]->hearts);
+                $list[$i]->mnb = html_entity_decode($GLOBALS["lang"]->members);
+                $list[$i]->mnc = html_entity_decode($GLOBALS["lang"]->created_on);
+                $list[$i]->cp = gr_img('coverpic/groups', $do['id']);
+                $list[$i]->tbclass = 'formpop';
+                if ($r[0]['grrole'] == 2 || isset($GLOBALS["roles"]['groups']['7'])) {
+                    $list[$i]->icon = 1;
+                    $list[$i]->iconattr = array();
+                    $list[$i]->iconattr['pn'] = 4;
+                    $list[$i]->iconattr['no'] = $do['id'];
+                    $list[$i]->iconattr['do'] = 'edit';
+                    $list[$i]->iconattr['act'] = 'group';
+                    $list[$i]->icontitle = $GLOBALS["lang"]->edit_group;
+                    $list[$i]->iconattr['title'] = $GLOBALS["lang"]->edit_group;
+                    $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->edit_group;
+                    $list[$i]->iconclass = 'gi-pencil-1 formpop';
                 } else {
-                    $dformat = 'd-M-y';
+                    $list[$i]->icon = 1;
+                    $list[$i]->iconattr = array();
+                    $list[$i]->iconattr['pn'] = 4;
+                    $list[$i]->iconattr['no'] = $do['id'];
+                    $list[$i]->iconattr['do'] = 'group';
+                    $list[$i]->iconattr['act'] = 'reportmsg';
+                    $list[$i]->icontitle = $GLOBALS["lang"]->report_group;
+                    $list[$i]->iconattr['title'] = $GLOBALS["lang"]->report_group;
+                    $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->report_group;
+                    $list[$i]->iconclass = 'gi-flag-1 formpop';
                 }
-                $list[$i]->lastlg = $tms->format($dformat);
-                if ($GLOBALS["default"]->time_format == 24) {
-                    $list[$i]->lastlgtm = $tms->format('H:i:s');
+                if ($r[0]['v6'] != 'unleavable') {
+                    $list[$i]->btn = $GLOBALS["lang"]->leave_group;
+                    $list[$i]->tbattr = 'pn="1" title="'.$GLOBALS["lang"]->leave_group.'" do="group" btn="'.$GLOBALS["lang"]->leave_group.'" act="leave"';
                 } else {
-                    $list[$i]->lastlgtm = $tms->format('h:i:s a');
+                    $list[$i]->btn = $GLOBALS["lang"]->report_group;
+                    $list[$i]->tbattr = 'class="formpop" pn="1" title="'.$GLOBALS["lang"]->report_group.'" do="group" btn="'.$GLOBALS["lang"]->report.'" act="reportmsg"';
                 }
-                $cfield = 'field';
-                $fieldtyp = 'profile';
-                if (isset($do['ldt']) && $do['ldt'] == 'group') {
-                    $cfield = 'gfield';
-                    $fieldtyp = 'group';
-                }
-                $query = 'SELECT ds.name as name,ds.v1 as val,ds.type as cat FROM gr_profiles ds WHERE ds.type="group" AND ds.uid=:fid AND ds.name="description"';
-                $query = $query.' UNION SELECT pr.name,vl.v1,pr.cat';
-                $query = $query.' FROM gr_profiles pr,gr_profiles vl WHERE vl.uid=:fid';
-                $query = $query.' AND vl.type=:ftype AND vl.name=pr.id AND pr.type=:stype';
-                $data = array();
-                $data['fid'] = $do["id"];
-                $data['ftype'] = $fieldtyp;
-                $data['stype'] = $cfield;
-                $data['tmz'] = $GLOBALS["default"]->timezone;
-                $fields = db('Grupo', 'q', $query, $data);
-                if (isset($do['ldt']) && $do['ldt'] == 'group') {
-                    if ($r[0]['v3'] != 'secret' || $r[0]['grrole'] == 1 || $r[0]['grrole'] == 2 || isset($GLOBALS["roles"]['groups']['7'])) {
-                        $list['viewlink'] = new stdClass();
-                        $list['viewlink']-> name = $GLOBALS["lang"]->group_link;
-                        if (isset($r[0]['groupslug']) && !empty($r[0]['groupslug'])) {
-                            $list['viewlink']-> cont = $GLOBALS["default"]->weburl.'chat/'.$r[0]['groupslug'].'/';
-                        } else {
-                            $list['viewlink']-> cont = $GLOBALS["default"]->weburl.'chat/group/'.$do['id'].'/';
-                        }
+                if (isset($r[0])) {
+                    $list[$i]->name = html_entity_decode($r[0]['v1']);
+                    if (!empty($r[0]['v2'])) {
+                        $list[$i]->uname = $GLOBALS["lang"]->protected_group;
                     }
-                } else if (!empty($usrname)) {
-                    $list['viewlink'] = new stdClass();
-                    $list['viewlink']-> name = $GLOBALS["lang"]->profile_link;
-                    $list['viewlink']-> cont = $GLOBALS["default"]->weburl.'chat/'.$usrname.'/';
-                }
-                $country_short_id = get_phrase_short_from_en_text('Country');
-                $state_short_id = get_phrase_short_from_en_text('State');
-                $interests_short_id = get_phrase_short_from_en_text('Interests');
-                $country_value = '';
-                $state_value = '';
-                global $country_array;
-                global $state_array;
-                foreach ($fields as $f) {
-                    $pf = $f['name'];
-                    $vpf = html_entity_decode($f['val']);
-                    $list[$pf] = new stdClass();
-                    $list[$pf]-> cont = $vpf;
-                    if ($f['name'] == 'description' && isset($do['ldt']) && $do['ldt'] == 'group') {
-                        $list[$pf]-> name = $GLOBALS["lang"]->description;
-                    } else {
-                        if ($f['name'] != 'description') {
-                            $varky = $f['name'];
-                            $list[$pf]-> name = $GLOBALS["lang"]->$varky;
-                            if ($f['cat'] == 'datefield') {
-                                if ($GLOBALS["default"]->dateformat == 'mdy') {
-                                    $dformat = 'M-d-y';
-                                } else if ($GLOBALS["default"]->dateformat == 'ymd') {
-                                    $dformat = 'y-M-d';
+                    if ($r[0]['v3'] == 'secret') {
+                        $list[$i]->uname = $GLOBALS["lang"]->secret_group;
+                    }
+                    if (gr_role('access', 'features', '5')) {
+                        if (!empty($r[0]['sharedmedia'])) {
+                            $sharedmedia = explode(';', $r[0]['sharedmedia']);
+                            $list[$i]->sharedmediatitle = $GLOBALS["lang"]->recent_images;
+                            foreach ($sharedmedia as $key => $media) {
+                                $fullimg = $GLOBALS["default"]->weburl.'gem/ore/grupo/files/dumb/'.$media;
+                                $media = 'gem/ore/grupo/files/preview/'.$media;
+                                if (!file_exists($media)) {
+                                    unset($sharedmedia[$key]);
                                 } else {
-                                    $dformat = 'd-M-y';
+                                    $sharedmedia[$key] = $GLOBALS["default"]->weburl.$media.'||'.$fullimg;
                                 }
-                                $list[$pf]-> cont = date($dformat, strtotime($list[$pf]-> cont));
                             }
-                        } else {
-                            unset($list[$pf]);
+                            $list[$i]->sharedmedia = implode(';', $sharedmedia);
                         }
                     }
-                    if ($pf == $country_short_id) {
-                        $list[$pf]-> cont = $country_array[$vpf];
-                        $country_value = $vpf;
+                } else {
+                    $list[$i]->name = $GLOBALS["lang"]->unknown;
+                }
+                $tms = new DateTime($r[0]['tms']);
+            }
+        } else {
+            $query = 'SELECT us.name AS uname,us.altered,us.role,';
+            $query = $query.'(SELECT count(1) FROM gr_msgs lk WHERE lk.type="like" AND lk.xtra=:uid) AS likes,';
+            $query = $query.'(SELECT name FROM gr_permissions rn WHERE rn.id=us.role) AS rolename,';
+            $query = $query.'(SELECT count(id) FROM gr_options WHERE type="pblock" AND v1=:usid AND v2=:uid) AS blocked,';
+            $query = $query.'(SELECT count(1) FROM gr_msgs sc WHERE sc.type="file" AND sc.uid=:uid) AS scount,';
+            $query = $query.'(SELECT IFNULL((SELECT CASE WHEN tz.v2="Auto" THEN ';
+            $query = $query.'(SELECT am.v2 FROM gr_options am WHERE am.type="profile" AND am.v1="autotmz" AND am.v3=tz.v3)';
+            $query = $query.' ELSE tz.v2 END AS timz FROM gr_options tz WHERE tz.type="profile" AND tz.v1="tmz" AND tz.v3=:usid),';
+            $query = $query.':tmz)) AS timezone,';
+            $query = $query.'(SELECT tms FROM gr_utrack WHERE uid=:uid ORDER BY tms DESC LIMIT 1) AS lastlg,';
+            $query = $query.'(SELECT v2 FROM gr_options WHERE v3=:uid AND type="profile" AND v1="name") AS name';
+            $query = $query.' FROM gr_users us WHERE us.id=:uid LIMIT 1';
+            $data = array();
+            $data['uid'] = $do["id"];
+            $data['usid'] = $uid;
+            $data['tmz'] = $GLOBALS["default"]->timezone;
+            $r = db('Grupo', 'q', $query, $data);
+            if (isset($r[0])) {
+                $list[$i]->shares = gr_shnum($r[0]['scount']);
+                $list[$i]->loves = gr_shnum($r[0]['likes']);
+                $list[$i]->mna = html_entity_decode($GLOBALS["lang"]->hearts);
+                $list[$i]->mnb = html_entity_decode($GLOBALS["lang"]->shares);
+                $list[$i]->mnc = html_entity_decode($GLOBALS["lang"]->last_login);
+                $list[$i]->rolename = $r[0]['rolename'];
+                $list[$i]->roleimg = gr_img('roles', $r[0]['role']);
+                $list[$i]->img = gr_img('users', $do['id']);
+                $list[$i]->cp = gr_img('coverpic/users', $do['id']);
+                if (isset($GLOBALS["roles"]['users'][2]) && $do['id'] != $uid && $r[0]['uname'] != $unq) {
+                    if (isset($r[0]['uname'])) {
+                        $list[$i]->icon = 1;
+                        $list[$i]->iconattr = array();
+                        $list[$i]->iconattr['data-no'] = $list[$i]->iconattr['xtid'] = $do['id'];
+                        $list[$i]->iconattr['do'] = 'edit';
+                        $list[$i]->iconattr['act'] = 'profile';
+                        $list[$i]->icontitle = $GLOBALS["lang"]->edit_profile;
+                        $list[$i]->iconattr['title'] = $GLOBALS["lang"]->edit_profile;
+                        $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->edit_profile;
+                        $list[$i]->iconclass = 'gi-pencil-1 formpop';
                     }
-                    if ($pf == $state_short_id) {
-                        $state_value = $vpf;
-                        if ($vpf == 0) unset($list[$pf]);
-                    }
-                    if ($pf == $interests_short_id) {
-                        $cont = '';
-                        $intrst_lists = explode(",", $vpf);
-                        foreach($intrst_lists as $intrst) {
-                            $cont .= ('<div class="interest_item_static">' . $intrst . '</div>');
-                        }
-                        $list[$pf]-> cont = $cont;
-                        $list[$pf]-> interest = 1;
+                } else if ($do['id'] != $uid) {
+                    $list[$i]->icon = 1;
+                    $list[$i]->iconattr = array();
+                    $list[$i]->iconattr['pn'] = 4;
+                    $list[$i]->iconattr['no'] = $do['id'];
+                    $list[$i]->iconattr['do'] = 'profile';
+                    $list[$i]->iconattr['act'] = 'block';
+                    if ($r[0]['blocked'] > 0) {
+                        $list[$i]->icontitle = $GLOBALS["lang"]->unblock_user;
+                        $list[$i]->iconattr['title'] = $GLOBALS["lang"]->unblock_user;
+                        $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->unblock_user;
+                        $list[$i]->iconclass = 'gi-lock-open-1 formpop';
+                    } else {
+                        $list[$i]->icontitle = $GLOBALS["lang"]->block_user;
+                        $list[$i]->iconattr['title'] = $GLOBALS["lang"]->block_user;
+                        $list[$i]->iconattr['btn'] = $GLOBALS["lang"]->block_user;
+                        $list[$i]->iconclass = 'gi-lock-1 formpop';
                     }
                 }
-                if ($state_value) {
-                    $list[$state_short_id]-> cont = $state_array[$country_value][$state_value];
-                }
+                if (!isset($GLOBALS["roles"]['privatemsg'][1]) || !isset($r[0]['uname'])) {
+                    $list[$i]->msgoff = 2;
+                    $list[$i]->msgoffmsg = $GLOBALS["lang"]->denied;
+                    if (!isset($r[0]['uname'])) {
+                        $list[$i]->msgoffmsg = $GLOBALS["lang"]->profile_noexists;
+                    }
+                    $list[$i]->tbclass = 'say';
+                    $list[$i]->btn = $GLOBALS["lang"]->message;
+                    $list[$i]->tbattr = 'type="e" say="'.$list[$i]->msgoffmsg.'"';
 
-                if (isset($do['ldt']) && $do['ldt'] == 'group') {
-                    if ($r[0]['grrole'] == 1 || $r[0]['grrole'] == 2 || isset($GLOBALS["roles"]['groups']['7'])) {
-                        $list['embedcode'] = new stdClass();
-                        $list['embedcode']-> name = $GLOBALS["lang"]->embed_code;
-                        $list['embedcode']-> cont = $list['viewlink']-> cont;
+                }
+                if ($do['id'] == $uid) {
+                    $list[$i]->msgoff = 2;
+                    $list[$i]->tbclass = 'editprf';
+                    $list[$i]->tbattr = 'type="editprofile"';
+                    $list[$i]->btn = $GLOBALS["lang"]->edit_profile;
+                }
+                if (isset($GLOBALS["roles"]['users'][10])) {
+                    $list[$i]->name = $r[0]['name'];
+                } else {
+                    $list[$i]->name = $r[0]['uname'];
+                }
+                if (isset($r[0]['uname']) && !empty($r[0]['uname'])) {
+                    $usrname = $r[0]['uname'];
+                    $list[$i]->uname = '@'.$r[0]['uname'];
+                } else {
+                    $usrname = 0;
+                    $list[$i]->uname = $GLOBALS["lang"]->unknown;
+                }
+                if (!empty($r[0]['lastlg'])) {
+                    $tms = new DateTime($r[0]['lastlg']);
+                } else if (isset($r[0]['uname'])) {
+                    $tms = new DateTime($r[0]['altered']);
+                } else {
+                    $tms = new DateTime();
+                }
+            }
+        }
+        if (isset($r[0])) {
+            $tmz = new DateTimeZone($r[0]['timezone']);
+            $tms->setTimezone($tmz);
+            $tmst = strtotime($tms->format('Y-m-d H:i:s'));
+            if ($GLOBALS["default"]->dateformat == 'mdy') {
+                $dformat = 'M-d-y';
+            } else if ($GLOBALS["default"]->dateformat == 'ymd') {
+                $dformat = 'y-M-d';
+            } else {
+                $dformat = 'd-M-y';
+            }
+            $list[$i]->lastlg = $tms->format($dformat);
+            if ($GLOBALS["default"]->time_format == 24) {
+                $list[$i]->lastlgtm = $tms->format('H:i:s');
+            } else {
+                $list[$i]->lastlgtm = $tms->format('h:i:s a');
+            }
+            $cfield = 'field';
+            $fieldtyp = 'profile';
+            if (isset($do['ldt']) && $do['ldt'] == 'group') {
+                $cfield = 'gfield';
+                $fieldtyp = 'group';
+            }
+            $query = 'SELECT ds.name as name,ds.v1 as val,ds.type as cat FROM gr_profiles ds WHERE ds.type="group" AND ds.uid=:fid AND ds.name="description"';
+            $query = $query.' UNION SELECT pr.name,vl.v1,pr.cat';
+            $query = $query.' FROM gr_profiles pr,gr_profiles vl WHERE vl.uid=:fid';
+            $query = $query.' AND vl.type=:ftype AND vl.name=pr.id AND pr.type=:stype';
+            $data = array();
+            $data['fid'] = $do["id"];
+            $data['ftype'] = $fieldtyp;
+            $data['stype'] = $cfield;
+            $data['tmz'] = $GLOBALS["default"]->timezone;
+            $fields = db('Grupo', 'q', $query, $data);
+            if (isset($do['ldt']) && $do['ldt'] == 'group') {
+                if ($r[0]['v3'] != 'secret' || $r[0]['grrole'] == 1 || $r[0]['grrole'] == 2 || isset($GLOBALS["roles"]['groups']['7'])) {
+                    $list['viewlink'] = new stdClass();
+                    $list['viewlink']-> name = $GLOBALS["lang"]->group_link;
+                    if (isset($r[0]['groupslug']) && !empty($r[0]['groupslug'])) {
+                        $list['viewlink']-> cont = $GLOBALS["default"]->weburl.'chat/'.$r[0]['groupslug'].'/';
+                    } else {
+                        $list['viewlink']-> cont = $GLOBALS["default"]->weburl.'chat/group/'.$do['id'].'/';
                     }
-                } else if ($do['id'] == $uid || isset($GLOBALS["roles"]['users']['2'])) {
+                }
+            } else if (!empty($usrname)) {
+                $list['viewlink'] = new stdClass();
+                $list['viewlink']-> name = $GLOBALS["lang"]->profile_link;
+                $list['viewlink']-> cont = $GLOBALS["default"]->weburl.'chat/'.$usrname.'/';
+            }
+            $country_short_id = get_phrase_short_from_en_text('Country');
+            $state_short_id = get_phrase_short_from_en_text('State');
+            $interests_short_id = get_phrase_short_from_en_text('Interests');
+            $country_value = '';
+            $state_value = '';
+            global $country_array;
+            global $state_array;
+            foreach ($fields as $f) {
+                $pf = $f['name'];
+                $vpf = html_entity_decode($f['val']);
+                $list[$pf] = new stdClass();
+                $list[$pf]-> cont = $vpf;
+                if ($f['name'] == 'description' && isset($do['ldt']) && $do['ldt'] == 'group') {
+                    $list[$pf]-> name = $GLOBALS["lang"]->description;
+                } else {
+                    if ($f['name'] != 'description') {
+                        $varky = $f['name'];
+                        $list[$pf]-> name = $GLOBALS["lang"]->$varky;
+                        if ($f['cat'] == 'datefield') {
+                            if ($GLOBALS["default"]->dateformat == 'mdy') {
+                                $dformat = 'M-d-y';
+                            } else if ($GLOBALS["default"]->dateformat == 'ymd') {
+                                $dformat = 'y-M-d';
+                            } else {
+                                $dformat = 'd-M-y';
+                            }
+                            $list[$pf]-> cont = date($dformat, strtotime($list[$pf]-> cont));
+                        }
+                    } else {
+                        unset($list[$pf]);
+                    }
+                }
+                if ($pf == $country_short_id) {
+                    $list[$pf]-> cont = $country_array[$vpf];
+                    $country_value = $vpf;
+                }
+                if ($pf == $state_short_id) {
+                    $state_value = $vpf;
+                    if ($vpf == 0) unset($list[$pf]);
+                }
+                if ($pf == $interests_short_id) {
+                    $cont = '';
+                    $intrst_lists = explode(",", $vpf);
+                    foreach($intrst_lists as $intrst) {
+                        $cont .= ('<div class="interest_item_static">' . $intrst . '</div>');
+                    }
+                    $list[$pf]-> cont = $cont;
+                    $list[$pf]-> interest = 1;
+                }
+            }
+            if ($state_value) {
+                $list[$state_short_id]-> cont = $state_array[$country_value][$state_value];
+            }
+
+            if (isset($do['ldt']) && $do['ldt'] == 'group') {
+                if ($r[0]['grrole'] == 1 || $r[0]['grrole'] == 2 || isset($GLOBALS["roles"]['groups']['7'])) {
                     $list['embedcode'] = new stdClass();
                     $list['embedcode']-> name = $GLOBALS["lang"]->embed_code;
                     $list['embedcode']-> cont = $list['viewlink']-> cont;
                 }
-            }
-
-        } else if ($do["type"] === "memsearch") {
-            $i = 0;
-            unset($list[0]);
-            if (!empty($do['ser']) || empty($do['ser']) && isset($do['ulist'])) {
-                $query = 'SELECT us.id,us.v1,op.v2 AS name,us.v3,us.v2,';
-                $query = $query.'un.name as uname';
-                $query = $query.' FROM gr_users un INNER JOIN gr_options us ON un.id=us.v2,gr_options op WHERE ';
-                $query = $query.'us.v2=op.v3 AND op.type="profile" AND us.v2<>:uid AND op.v1="name" AND ';
-                $query = $query.'us.type="gruser" AND us.v1=:gid ';
-                $query = $query.'AND op.v2 LIKE :search OR us.v2=op.v3 AND op.type="profile" AND us.v2<>:uid AND ';
-                $query = $query.'op.v1="name" AND us.type="gruser" AND un.name LIKE :search AND us.v1=:gid ';
-                $query = $query.'ORDER BY op.v2 ASC LIMIT 4';
-                $data = array();
-                $data['gid'] = $do["gid"];
-                $data['uid'] = $uid;
-                $data['search'] = '%'.$do['ser'].'%';
-                $rs = db('Grupo', 'q', $query, $data);
-                foreach ($rs as $f) {
-                    $list[$i] = new stdClass();
-                    $list[$i]->img = gr_img('users', $f['v2']);
-                    if (isset($GLOBALS["roles"]['users'][10])) {
-                        $list[$i]->name = $f['name'];
-                    } else {
-                        $list[$i]->name = $f['uname'];
-                    }
-                    $list[$i]->id = $f['v2'];
-                    $list[$i]->uname = $f['uname'];
-                    $i = $i+1;
-                }
+            } else if ($do['id'] == $uid || isset($GLOBALS["roles"]['users']['2'])) {
+                $list['embedcode'] = new stdClass();
+                $list['embedcode']-> name = $GLOBALS["lang"]->embed_code;
+                $list['embedcode']-> cont = $list['viewlink']-> cont;
             }
         }
-        $r = json_encode($list);
-        gr_prnt($r);
+
+    } else if ($do["type"] === "memsearch") {
+        $i = 0;
+        unset($list[0]);
+        if (!empty($do['ser']) || empty($do['ser']) && isset($do['ulist'])) {
+            $query = 'SELECT us.id,us.v1,op.v2 AS name,us.v3,us.v2,';
+            $query = $query.'un.name as uname';
+            $query = $query.' FROM gr_users un INNER JOIN gr_options us ON un.id=us.v2,gr_options op WHERE ';
+            $query = $query.'us.v2=op.v3 AND op.type="profile" AND us.v2<>:uid AND op.v1="name" AND ';
+            $query = $query.'us.type="gruser" AND us.v1=:gid ';
+            $query = $query.'AND op.v2 LIKE :search OR us.v2=op.v3 AND op.type="profile" AND us.v2<>:uid AND ';
+            $query = $query.'op.v1="name" AND us.type="gruser" AND un.name LIKE :search AND us.v1=:gid ';
+            $query = $query.'ORDER BY op.v2 ASC LIMIT 4';
+            $data = array();
+            $data['gid'] = $do["gid"];
+            $data['uid'] = $uid;
+            $data['search'] = '%'.$do['ser'].'%';
+            $rs = db('Grupo', 'q', $query, $data);
+            foreach ($rs as $f) {
+                $list[$i] = new stdClass();
+                $list[$i]->img = gr_img('users', $f['v2']);
+                if (isset($GLOBALS["roles"]['users'][10])) {
+                    $list[$i]->name = $f['name'];
+                } else {
+                    $list[$i]->name = $f['uname'];
+                }
+                $list[$i]->id = $f['v2'];
+                $list[$i]->uname = $f['uname'];
+                $i = $i+1;
+            }
+        }
     }
-    ?>
+
+    $usr_interest_short = get_phrase_short_from_en_text('Interests');
+    $usr_interests = array();
+    $group_interest_short = get_group_phrase_short_from_en_text('Interests');
+    if ($usr_interest_short != '') {
+        $ui_id = db('Grupo', 's', 'profiles', 'name', $usr_interest_short)[0]['id'];
+        $gr_interest = db('Grupo', 's', 'profiles', 'type,uid,name', 'profile', $uid, $ui_id);
+        if (!empty($gr_interest)) {
+            $usr_interests = explode(",", $gr_interest[0]['v1']);
+        }
+    }
+    $cnt = count($list);
+    if ($do["filtr"] == 'interests') {
+        for ($i = 1; $i < $cnt; $i ++) {
+            if ($group_interest_short == '') {
+                unset($list[$i]);
+                continue;
+            }
+            $lid = intval(substr($list[$i]->id, strpos($list[$i]->id, 'no=') + 4));
+            $gi_id = db('Grupo', 's', 'profiles', 'name', $group_interest_short)[0]['id'];
+            $gr_interest = db('Grupo', 's', 'profiles', 'type,uid,name', 'group', $lid, $gi_id);
+            if (empty($gr_interest)) {
+                unset($list[$i]);
+                continue;
+            }
+            if (!in_array($gr_interest[0]['v1'], $usr_interests) || count($usr_interests) == 0) {
+                unset($list[$i]);
+            }
+        }
+    }
+    $r = json_encode($list);
+    gr_prnt($r);
+    exit;
+}
+?>

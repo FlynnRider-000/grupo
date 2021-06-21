@@ -749,8 +749,7 @@ function gr_edit() {
                             if ($GLOBALS["default"]->email_verification == 'enable') {
                                 usr('Grupo', 'alter', 'role', 1, $arg[1]['id']);
                                 gr_mail('verify', $arg[1]['id'], 0, rn(5), 1);
-                                gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
-                                gr_prnt('window.location.href = "";');
+                                gr_prnt('alertModal("Alert","'.$GLOBALS["lang"]->check_inbox.'","OK", true);');
                             }
                         }
                     }

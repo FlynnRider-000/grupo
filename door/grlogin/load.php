@@ -125,8 +125,7 @@ function gr_register($do) {
                         } else {
                             if ($GLOBALS["default"]->email_verification == 'enable') {
                                 gr_mail('verify', $id, 0, rn(5), 1);
-                                gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
-                                gr_prnt('window.location.href = "";');
+                                gr_prnt('alertModal("Alert","'.$GLOBALS["lang"]->check_inbox.'","OK", true);');
                             } else {
                                 usr('Grupo', 'forcelogin', $id);
                                 gr_prnt('location.reload();');
@@ -170,8 +169,7 @@ function gr_add_interests($do) {
         db('Grupo', 'i', 'profiles', 'type,name,uid, v1', 'profile', $fields[0]['id'], $do['uid'], $do[$interests_short_id]);
         if ($GLOBALS["default"]->email_verification == 'enable') {
             gr_mail('verify', $id, 0, rn(5), 1);
-            gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
-            gr_prnt('window.location.href = "";');
+            gr_prnt('alertModal("Alert","'.$GLOBALS["lang"]->check_inbox.'","OK", true);');
         } else {
             usr('Grupo', 'forcelogin', $do['uid']);
             gr_prnt('location.reload();');
@@ -284,8 +282,7 @@ function gr_forgot($do) {
             $usr = usr('Grupo', 'select', $do["sign"]);
             if (isset($usr['id'])) {
                 gr_mail('reset', $usr['id'], 0, rn(5), 1);
-                gr_prnt('alert("'.$GLOBALS["lang"]->check_inbox.'");');
-                gr_prnt('window.location.href = "";');
+                gr_prnt('alertModal("Alert","'.$GLOBALS["lang"]->check_inbox.'","OK", true);');
             } else {
                 gr_prnt('grerrormsg("'.$GLOBALS["lang"]->user_does_not_exist.'","e");');
             }

@@ -101,6 +101,12 @@ $GLOBALS["grads"] = gr_ads('get');
                                                 ?>
                                                 <ul class='subtab'>
                                                     <li filtr='all'><?php gec($GLOBALS["lang"]->all) ?></li>
+                                                    <li filtr='interests'>
+                                                        <?php
+                                                        $group_interest_short = get_group_phrase_short_from_en_text('Interests');
+                                                        gec($GLOBALS["lang"]->$group_interest_short)
+                                                        ?>
+                                                    </li>
                                                     <li filtr='joined'><?php gec($GLOBALS["lang"]->joined) ?></li>
                                                     <li filtr='unjoined'><?php gec($GLOBALS["lang"]->unjoined) ?></li>
                                                 </ul>
