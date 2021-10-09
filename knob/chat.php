@@ -132,7 +132,9 @@ $GLOBALS["grads"] = gr_ads('get');
                                         <li act='online' side='lside' zero='0' unread='0' zval='<?php gec($GLOBALS["lang"]->zero_online) ?>'><?php gec($GLOBALS["lang"]->online) ?> <i></i></li>
                                         <?php
                                     } ?>
-
+                                    <li act='app' side='lside' zero='0' unread='0' zval='No Apps'>
+                                        Apps<i></i>
+                                    </li>
                                     <li side='lside' class='xtra'></li>
                                     <span class="gruploader">
                                         <i class="gi-up-open-1 animate__animated animate__rotateIn animate__infinite" data-toggle="tooltip" title="<?php gec($GLOBALS["lang"]->uploading) ?>"></i>

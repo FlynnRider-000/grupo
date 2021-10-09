@@ -58,6 +58,27 @@ function loadlist(el, e) {
             el.addClass("active");
         }
     }
+
+    if (el.attr('act') == 'app') {
+        const appLists = {
+            "Yiaap": "https://yiaap.com",
+            "Fresh": "https://fresh.yiaap.com"
+        };
+
+        $(".swr-grupo .lside .listloader").fadeOut();
+        $(".swr-grupo .lside > .content > .list").fadeIn();
+
+        if (Object.keys(appLists).length == 0) {
+            $(".swr-grupo .lside > .content > .list").html('<div class=zeroelem> <div> <span>'+el.attr('zero')+'<span>'+el.attr('zval')+'</span> </span> </div> </div>');
+        } else {
+            $(".swr-grupo .lside > .content > .list").html('');
+            for (const [key, value] of Object.entries(appLists)) {
+                $(".swr-grupo .lside > .content > .list").append('<li><a href="'+value+'" target=_blank>'+key+'</a></li>');
+            }
+        }
+        return;
+    }
+
     $proc.attr('side', el.attr('side'));
     $proc.attr('act', el.attr('act'));
     $proc.attr('xtra', el.attr('xtra'));
